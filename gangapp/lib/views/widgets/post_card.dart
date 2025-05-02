@@ -32,6 +32,7 @@ class _PostCardState extends State<PostCard>
   final PostService _postService = PostService();
   final ApiService _apiService = ApiService();
   final TextEditingController _commentController = TextEditingController();
+  final Map<String, String?> _profileImageCache = {};
 
   bool _isCommentsVisible = false;
   bool _isSubmitting = false;
@@ -67,6 +68,7 @@ class _PostCardState extends State<PostCard>
   void dispose() {
     _commentController.dispose();
     _animationController.dispose();
+    _profileImageCache.clear();
     super.dispose();
   }
 
@@ -79,35 +81,49 @@ class _PostCardState extends State<PostCard>
     setState(() => _isSubmitting = true);
 
     try {
+      Map<String, dynamic> response;
       if (kIsWeb) {
-        await _apiService.createCommentWeb(
+        response = await _apiService.createCommentWeb(
           postId: widget.post.id,
           content: _commentController.text,
           imageBytes: _webImage,
         );
       } else {
-        await _apiService.createComment(
+        response = await _apiService.createComment(
           postId: widget.post.id,
           content: _commentController.text,
           image: _selectedImage,
         );
       }
 
-      _commentController.clear();
-      setState(() {
-        _selectedImage = null;
-        _webImage = null;
-      });
+      // Create a new Comment object from the response
+      final newComment = Comment(
+        id: response['id'],
+        user: response['user'],
+        username: response['username'],
+        content: response['content'],
+        createdAt: DateTime.parse(response['created_at']),
+        updatedAt: DateTime.parse(response['updated_at']),
+        imageUrl: response['image_url'],
+      );
 
-      if (widget.onPostArchived != null) {
-        widget.onPostArchived!();
+      // Update the post's comments list
+      if (mounted) {
+        setState(() {
+          widget.post.comments.add(newComment);
+          _commentController.clear();
+          _selectedImage = null;
+          _webImage = null;
+        });
       }
 
       _showSnackBar("Comment posted successfully");
     } catch (e) {
       _showSnackBar("Error: $e", isError: true);
     } finally {
-      setState(() => _isSubmitting = false);
+      if (mounted) {
+        setState(() => _isSubmitting = false);
+      }
     }
   }
 
@@ -347,145 +363,269 @@ class _PostCardState extends State<PostCard>
 
         return Container(
           margin: EdgeInsets.only(bottom: 16),
-          child: Row(
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildAvatar(comment.username, isReply: false),
-              SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      padding:
-                          EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.only(
-                          topRight: Radius.circular(20),
-                          bottomLeft: Radius.circular(20),
-                          bottomRight: Radius.circular(20),
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
-                            blurRadius: 8,
-                            offset: Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Flexible(
-                                child: Text(
-                                  comment.username,
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 14,
-                                    color: Colors.black87,
-                                  ),
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                              Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(
-                                    _formatDate(comment.createdAt),
-                                    style: TextStyle(
-                                      color: Colors.grey[500],
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                  if (isCurrentUser) ...[
-                                    SizedBox(width: 8),
-                                    PopupMenuButton<String>(
-                                      icon: Icon(
-                                        Icons.more_vert_rounded,
-                                        color: Colors.grey[500],
-                                        size: 18,
-                                      ),
-                                      itemBuilder: (context) => [
-                                        PopupMenuItem(
-                                          value: 'edit',
-                                          child: Row(
-                                            children: [
-                                              Icon(Icons.edit_rounded,
-                                                  color: Colors.grey[700]),
-                                              SizedBox(width: 8),
-                                              Text('Edit Comment'),
-                                            ],
-                                          ),
-                                        ),
-                                        PopupMenuItem(
-                                          value: 'delete',
-                                          child: Row(
-                                            children: [
-                                              Icon(Icons.delete_rounded,
-                                                  color: Colors.red[400]),
-                                              SizedBox(width: 8),
-                                              Text('Delete Comment',
-                                                  style: TextStyle(
-                                                      color: Colors.red[400])),
-                                            ],
-                                          ),
-                                        ),
-                                      ],
-                                      onSelected: (value) async {
-                                        if (value == 'delete') {
-                                          await _showDeleteCommentConfirmationDialog(
-                                              comment.id);
-                                        } else if (value == 'edit') {
-                                          await _showEditCommentDialog(comment);
-                                        }
-                                      },
-                                    ),
-                                  ],
-                                ],
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildAvatar(comment.username, isReply: false),
+                  SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          padding: EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 12),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.only(
+                              topRight: Radius.circular(20),
+                              bottomLeft: Radius.circular(20),
+                              bottomRight: Radius.circular(20),
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.05),
+                                blurRadius: 8,
+                                offset: Offset(0, 2),
                               ),
                             ],
                           ),
-                          SizedBox(height: 6),
-                          Text(
-                            comment.content,
-                            style: TextStyle(
-                              fontSize: 14,
-                              height: 1.4,
-                              color: Colors.black.withOpacity(0.8),
-                            ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Flexible(
+                                    child: Text(
+                                      comment.username,
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 14,
+                                        color: Colors.black87,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                  Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        _formatDate(comment.createdAt),
+                                        style: TextStyle(
+                                          color: Colors.grey[500],
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                      if (isCurrentUser) ...[
+                                        SizedBox(width: 8),
+                                        PopupMenuButton<String>(
+                                          icon: Icon(
+                                            Icons.more_vert_rounded,
+                                            color: Colors.grey[500],
+                                            size: 18,
+                                          ),
+                                          itemBuilder: (context) => [
+                                            PopupMenuItem(
+                                              value: 'edit',
+                                              child: Row(
+                                                children: [
+                                                  Icon(Icons.edit_rounded,
+                                                      color: Colors.grey[700]),
+                                                  SizedBox(width: 8),
+                                                  Text('Edit Comment'),
+                                                ],
+                                              ),
+                                            ),
+                                            PopupMenuItem(
+                                              value: 'delete',
+                                              child: Row(
+                                                children: [
+                                                  Icon(Icons.delete_rounded,
+                                                      color: Colors.red[400]),
+                                                  SizedBox(width: 8),
+                                                  Text('Delete Comment',
+                                                      style: TextStyle(
+                                                          color:
+                                                              Colors.red[400])),
+                                                ],
+                                              ),
+                                            ),
+                                          ],
+                                          onSelected: (value) async {
+                                            if (value == 'delete') {
+                                              await _showDeleteCommentConfirmationDialog(
+                                                  comment.id);
+                                            } else if (value == 'edit') {
+                                              await _showEditCommentDialog(
+                                                  comment);
+                                            }
+                                          },
+                                        ),
+                                      ],
+                                    ],
+                                  ),
+                                ],
+                              ),
+                              SizedBox(height: 6),
+                              Text(
+                                comment.content,
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  height: 1.4,
+                                  color: Colors.black.withOpacity(0.8),
+                                ),
+                              ),
+                              if (comment.effectiveImageUrl != null) ...[
+                                SizedBox(height: 12),
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: Image.network(
+                                    comment.effectiveImageUrl!,
+                                    fit: BoxFit.cover,
+                                    height: 180,
+                                    width: double.infinity,
+                                  ),
+                                ),
+                              ],
+                            ],
                           ),
-                          if (comment.effectiveImageUrl != null) ...[
-                            SizedBox(height: 12),
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(12),
-                              child: Image.network(
-                                comment.effectiveImageUrl!,
-                                fit: BoxFit.cover,
-                                height: 180,
-                                width: double.infinity,
+                        ),
+                        Padding(
+                          padding: EdgeInsets.only(left: 16, top: 8),
+                          child: TextButton.icon(
+                            onPressed: () => _showReplyDialog(comment),
+                            icon: Icon(Icons.reply_rounded,
+                                size: 16, color: Colors.grey[600]),
+                            label: Text(
+                              'Reply',
+                              style: TextStyle(
+                                color: Colors.grey[600],
+                                fontSize: 12,
                               ),
                             ),
-                          ],
-                        ],
-                      ),
+                          ),
+                        ),
+                      ],
                     ),
-                    if (comment.replies != null &&
-                        comment.replies!.isNotEmpty) ...[
-                      SizedBox(height: 8),
-                      ...comment.replies!
-                          .map((reply) => _buildReplyItem(reply)),
-                    ],
-                  ],
-                ),
+                  ),
+                ],
               ),
+              if (comment.replies != null && comment.replies!.isNotEmpty) ...[
+                SizedBox(height: 8),
+                ...comment.replies!.map((reply) => _buildReplyItem(reply)),
+              ],
             ],
           ),
         );
       },
+    );
+  }
+
+  Future<void> _showReplyDialog(Comment parentComment) async {
+    final TextEditingController replyController = TextEditingController();
+    File? selectedImage;
+    Uint8List? webImage;
+
+    return showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Reply to ${parentComment.username}'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: replyController,
+              decoration: InputDecoration(
+                hintText: 'Write your reply...',
+                border: OutlineInputBorder(),
+              ),
+              maxLines: 3,
+            ),
+            SizedBox(height: 16),
+            ElevatedButton.icon(
+              onPressed: () async {
+                final picked =
+                    await ImagePicker().pickImage(source: ImageSource.gallery);
+                if (picked != null) {
+                  if (kIsWeb) {
+                    final bytes = await picked.readAsBytes();
+                    setState(() => webImage = bytes);
+                  } else {
+                    setState(() => selectedImage = File(picked.path));
+                  }
+                }
+              },
+              icon: Icon(Icons.image),
+              label: Text('Add Image'),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              if (replyController.text.trim().isEmpty) {
+                _showSnackBar("Please write a reply", isError: true);
+                return;
+              }
+
+              try {
+                Map<String, dynamic> response;
+                if (kIsWeb) {
+                  response = await _apiService.createReplyWeb(
+                    postId: widget.post.id,
+                    commentId: parentComment.id,
+                    content: replyController.text,
+                    imageBytes: webImage,
+                  );
+                } else {
+                  response = await _apiService.createReply(
+                    postId: widget.post.id,
+                    commentId: parentComment.id,
+                    content: replyController.text,
+                    image: selectedImage,
+                  );
+                }
+
+                // Create a new Comment object for the reply
+                final newReply = Comment(
+                  id: response['id'],
+                  user: response['user'],
+                  username: response['username'],
+                  content: response['content'],
+                  createdAt: DateTime.parse(response['created_at']),
+                  updatedAt: DateTime.parse(response['updated_at']),
+                  imageUrl: response['image_url'],
+                );
+
+                // Update the parent comment's replies list
+                if (mounted) {
+                  setState(() {
+                    if (parentComment.replies == null) {
+                      parentComment.replies = [];
+                    }
+                    parentComment.replies!.add(newReply);
+                  });
+                }
+
+                Navigator.pop(context);
+                _showSnackBar("Reply posted successfully");
+              } catch (e) {
+                _showSnackBar("Error: $e", isError: true);
+              }
+            },
+            child: Text('Post Reply'),
+          ),
+        ],
+      ),
     );
   }
 
@@ -628,38 +768,67 @@ class _PostCardState extends State<PostCard>
     );
   }
 
+  Future<String?> _getUserProfileImage(String username) async {
+    // Return cached image if available
+    if (_profileImageCache.containsKey(username)) {
+      return _profileImageCache[username];
+    }
+
+    try {
+      final profile = await _apiService.getPublicProfile(username);
+      final profileImage = profile['profile_picture'];
+      // Cache the profile image
+      _profileImageCache[username] = profileImage;
+      return profileImage;
+    } catch (e) {
+      print('Error fetching profile image: $e');
+      return null;
+    }
+  }
+
   Widget _buildAvatar(String username, {required bool isReply}) {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: isReply
-            ? null
-            : LinearGradient(
-                colors: [_secondaryColor, _primaryColor],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+    return FutureBuilder<String?>(
+      future: _getUserProfileImage(username),
+      builder: (context, snapshot) {
+        final profileImage = snapshot.data;
+
+        return Container(
+          decoration: BoxDecoration(
+            gradient: isReply
+                ? null
+                : LinearGradient(
+                    colors: [_secondaryColor, _primaryColor],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+            color: isReply ? _secondaryColor.withOpacity(0.9) : null,
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: _primaryColor.withOpacity(isReply ? 0.15 : 0.2),
+                blurRadius: isReply ? 4 : 6,
+                offset: Offset(0, 2),
               ),
-        color: isReply ? _secondaryColor.withOpacity(0.9) : null,
-        shape: BoxShape.circle,
-        boxShadow: [
-          BoxShadow(
-            color: _primaryColor.withOpacity(isReply ? 0.15 : 0.2),
-            blurRadius: isReply ? 4 : 6,
-            offset: Offset(0, 2),
+            ],
           ),
-        ],
-      ),
-      child: CircleAvatar(
-        backgroundColor: Colors.transparent,
-        radius: isReply ? 14 : 18,
-        child: Text(
-          username.isNotEmpty ? username[0].toUpperCase() : '?',
-          style: TextStyle(
-            fontSize: isReply ? 12 : 16,
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
+          child: CircleAvatar(
+            backgroundColor: Colors.transparent,
+            radius: isReply ? 14 : 18,
+            backgroundImage:
+                profileImage != null ? NetworkImage(profileImage) : null,
+            child: profileImage == null
+                ? Text(
+                    username.isNotEmpty ? username[0].toUpperCase() : '?',
+                    style: TextStyle(
+                      fontSize: isReply ? 12 : 16,
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  )
+                : null,
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 

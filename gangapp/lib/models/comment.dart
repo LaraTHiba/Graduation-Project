@@ -9,7 +9,7 @@ class Comment {
   final int? parentComment;
   final DateTime createdAt;
   final DateTime updatedAt;
-  final List<Comment>? replies;
+  List<Comment>? replies;
   final bool isDeleted;
 
   Comment({
@@ -27,15 +27,14 @@ class Comment {
     this.isDeleted = false,
   });
 
-  String? get effectiveImageUrl => image ?? imageUrl;
+  String? get effectiveImageUrl {
+    if (imageUrl == null) return null;
+    return imageUrl!.startsWith('http')
+        ? imageUrl
+        : 'http://127.0.0.1:8000$imageUrl';
+  }
 
   factory Comment.fromJson(Map<String, dynamic> json) {
-    List<Comment>? repliesList;
-    if (json['replies'] != null) {
-      repliesList = List<Comment>.from(
-          json['replies'].map((reply) => Comment.fromJson(reply)));
-    }
-
     return Comment(
       id: json['id'],
       user: json['user'],
@@ -47,7 +46,11 @@ class Comment {
       parentComment: json['parent_comment'],
       createdAt: DateTime.parse(json['created_at']),
       updatedAt: DateTime.parse(json['updated_at']),
-      replies: repliesList,
+      replies: json['replies'] != null
+          ? (json['replies'] as List)
+              .map((reply) => Comment.fromJson(reply))
+              .toList()
+          : null,
       isDeleted: json['is_deleted'] ?? false,
     );
   }
