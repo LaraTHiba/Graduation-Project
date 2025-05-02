@@ -7,19 +7,18 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
-
 class ProfileController {
   final ApiService _apiService = ApiService();
-  
+
   // Current user's username (cached)
   String? _currentUsername;
-  
+
   // Get current user's username
   Future<String?> getCurrentUsername() async {
     if (_currentUsername != null) {
       return _currentUsername;
     }
-    
+
     try {
       final profile = await _apiService.getCurrentUserProfile();
       _currentUsername = profile['user']['username'];
@@ -29,13 +28,13 @@ class ProfileController {
       return null;
     }
   }
-  
+
   // Check if profile is for current user
   Future<bool> isCurrentUserProfile(String username) async {
     final currentUsername = await getCurrentUsername();
     return currentUsername == username;
   }
-  
+
   // Get profile (handles both current user and other users)
   Future<Map<String, dynamic>> getProfile({String? username}) async {
     try {
@@ -56,7 +55,7 @@ class ProfileController {
       throw Exception('Failed to load profile: $e');
     }
   }
-  
+
   // Update user profile
   Future<Map<String, dynamic>> updateProfile({
     required String fullName,
@@ -92,7 +91,7 @@ class ProfileController {
       throw Exception('Failed to update profile: $e');
     }
   }
-  
+
   // Logout user
   // Future<bool> logout() async {
   //   final prefs = await SharedPreferences.getInstance();
@@ -133,6 +132,17 @@ class ProfileController {
       throw Exception('Failed to logout: $e');
     }
   }
+
+  // Delete user account
+  // Future<bool> deleteAccount() async {
+  //   try {
+  //     final result = await _apiService.deleteAccount();
+  //     if (result) {
+  //       _currentUsername = null;
+  //     }
+  //     return result;
+  //   } catch (e) {
+  //     throw Exception('Failed to delete account: $e');
+  //   }
+  // }
 }
-
-

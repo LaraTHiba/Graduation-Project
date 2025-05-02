@@ -1729,4 +1729,30 @@ class ApiService {
       throw Exception('Failed to archive post: ${response.body}');
     }
   }
+
+  // Delete user account
+  // Future<bool> deleteAccount() async {
+  //   final token = await getAuthToken();
+
+  //   try {
+  //     final response = await http.delete(
+  //       Uri.parse('$baseUrl/auth/delete-account/'),
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //         'Authorization': 'Bearer $token',
+  //       },
+  //     );
+
+  //     if (response.statusCode == 200 || response.statusCode == 204) {
+  //       final prefs = await SharedPreferences.getInstance();
+  //       await prefs.remove('access_token');
+  //       await prefs.remove('refresh_token');
+  //       return true;
+  //     } else {
+  //       throw Exception('Failed to delete account: ${response.body}');
+  //     }
+  //   } catch (e) {
+  //     throw Exception('Failed to delete account: $e');
+  //   }
+  // }
 }
