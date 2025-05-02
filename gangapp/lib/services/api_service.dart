@@ -1755,4 +1755,12 @@ class ApiService {
   //     throw Exception('Failed to delete account: $e');
   //   }
   // }
+
+  Future<Map<String, String>> _getHeaders() async {
+    final token = await getAuthToken();
+    return {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $token',
+    };
+  }
 }

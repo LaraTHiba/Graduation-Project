@@ -28,6 +28,7 @@ class _ProfilePageState extends State<ProfilePage> {
   bool _isSaving = false;
   bool _isCurrentUser = true;
   bool _isSettingsOpen = false;
+  List<Map<String, dynamic>> _userPosts = [];
 
   // User data
   Map<String, dynamic> _userData = {};
@@ -74,6 +75,7 @@ class _ProfilePageState extends State<ProfilePage> {
     try {
       final profileData =
           await _profileController.getProfile(username: widget.username);
+
       setState(() {
         _userDetails = profileData;
         _userData = profileData['user'] ?? {};
@@ -84,9 +86,27 @@ class _ProfilePageState extends State<ProfilePage> {
         _phoneNumberController.text = _userData['phone_number'] ?? '';
         _isLoading = false;
       });
+
+      // Fetch user posts after profile data is loaded
+      await _fetchUserPosts();
     } catch (e) {
       _showErrorDialog('Failed to load profile', 'Please try again later.');
       setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _fetchUserPosts() async {
+    try {
+      final username = widget.username ?? _userData['username'];
+      if (username != null) {
+        final posts = await _profileController.getUserPosts(username);
+        setState(() {
+          _userPosts = posts;
+        });
+      }
+    } catch (e) {
+      print('Error fetching user posts: $e');
+      // Don't show error dialog for posts as it's not critical
     }
   }
 
@@ -461,6 +481,187 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
+  Widget _buildPostsGrid() {
+    if (_userPosts.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.grey[100],
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.post_add,
+                size: 48,
+                color: Colors.grey[400],
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'No posts yet',
+              style: GoogleFonts.mukta(
+                color: Colors.grey[600],
+                fontSize: 16,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Create your first post to share with the community',
+              style: GoogleFonts.mukta(
+                color: Colors.grey[500],
+                fontSize: 14,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: _fetchUserPosts,
+      color: _primaryColor,
+      backgroundColor: Colors.white,
+      child: GridView.builder(
+        shrinkWrap: true,
+        physics: const AlwaysScrollableScrollPhysics(),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 3,
+          crossAxisSpacing: 4,
+          mainAxisSpacing: 4,
+          childAspectRatio: 1,
+        ),
+        itemCount: _userPosts.length,
+        itemBuilder: (context, index) {
+          final post = _userPosts[index];
+          // Try all possible image keys
+          final imageUrl =
+              post['image_url'] ?? post['image'] ?? post['imageUrl'];
+          return Hero(
+            tag: 'post_${post['id']}',
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () {
+                  // TODO: Navigate to post detail
+                },
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(8),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        if (imageUrl != null && imageUrl.toString().isNotEmpty)
+                          Image.network(
+                            imageUrl,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Container(
+                                color: Colors.grey[200],
+                                child: Icon(
+                                  Icons.image_not_supported,
+                                  color: Colors.grey[400],
+                                ),
+                              );
+                            },
+                          )
+                        else
+                          Container(
+                            color: Colors.grey[200],
+                            child: Icon(
+                              Icons.image_not_supported,
+                              color: Colors.grey[400],
+                            ),
+                          ),
+                        Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                Colors.transparent,
+                                Colors.black.withOpacity(0.7),
+                              ],
+                            ),
+                          ),
+                        ),
+                        Positioned(
+                          bottom: 8,
+                          left: 8,
+                          right: 8,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                post['title'] ?? '',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: 4),
+                              Row(
+                                children: [
+                                  const Icon(
+                                    Icons.favorite,
+                                    color: Colors.white,
+                                    size: 12,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    '${post['likes_count'] ?? 0}',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  const Icon(
+                                    Icons.comment,
+                                    color: Colors.white,
+                                    size: 12,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    '${post['comments_count'] ?? 0}',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return _isLoading
@@ -701,6 +902,17 @@ class _ProfilePageState extends State<ProfilePage> {
                                     ],
                                   ),
                                 ),
+                                SizedBox(height: 24),
+                                Text(
+                                  'Posts',
+                                  style: GoogleFonts.mukta(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                    color: _primaryColor,
+                                  ),
+                                ),
+                                SizedBox(height: 16),
+                                _buildPostsGrid(),
                               ],
                             ),
                           ),

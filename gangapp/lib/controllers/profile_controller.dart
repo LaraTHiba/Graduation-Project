@@ -145,4 +145,13 @@ class ProfileController {
   //     throw Exception('Failed to delete account: $e');
   //   }
   // }
+
+  Future<List<Map<String, dynamic>>> getUserPosts(String username) async {
+    try {
+      final response = await _apiService.getUserPosts(username);
+      return List<Map<String, dynamic>>.from(response);
+    } catch (e) {
+      throw Exception('Failed to fetch user posts: $e');
+    }
+  }
 }
