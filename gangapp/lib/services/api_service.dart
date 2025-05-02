@@ -63,43 +63,30 @@ class ApiService {
 
   // Login
   Future<Map<String, dynamic>> login(String username, String password) async {
-    try {
-      final response = await http.post(
-        Uri.parse(loginEndpoint),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'username': username,
-          'password': password,
-        }),
-      );
+    final response = await http.post(
+      Uri.parse(loginEndpoint),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'username': username,
+        'password': password,
+      }),
+    );
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
 
-        if (data['access'] == null || data['refresh'] == null) {
-          throw Exception('Invalid response format: missing tokens');
-        }
-
-        // Save tokens
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('access_token', data['access']);
-        await prefs.setString('refresh_token', data['refresh']);
-        await prefs.setString('username', username);
-
-        // Verify tokens were saved
-        final savedAccessToken = prefs.getString('access_token');
-        final savedRefreshToken = prefs.getString('refresh_token');
-
-        if (savedAccessToken == null || savedRefreshToken == null) {
-          throw Exception('Failed to save authentication tokens');
-        }
-
-        return data;
-      } else {
-        throw Exception('Login failed: ${response.body}');
+      if (data['access'] == null || data['refresh'] == null) {
+        throw Exception('Invalid response format: missing tokens');
       }
-    } catch (e) {
-      throw Exception('Login error: $e');
+
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('access_token', data['access']);
+      await prefs.setString('refresh_token', data['refresh']);
+      await prefs.setString('username', username);
+
+      return data;
+    } else {
+      throw Exception('Login failed: ${response.body}');
     }
   }
 
@@ -123,9 +110,7 @@ class ApiService {
     final response = await http.post(
       Uri.parse(resetPasswordEmailEndpoint),
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'email': email,
-      }),
+      body: jsonEncode({'email': email}),
     );
 
     if (response.statusCode != 200) {
@@ -190,12 +175,8 @@ class ApiService {
 
     final response = await http.post(
       Uri.parse(logoutEndpoint),
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: jsonEncode({
-        'refresh_token': refreshToken,
-      }),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'refresh_token': refreshToken}),
     );
 
     if (response.statusCode == 200 || response.statusCode == 205) {
@@ -209,32 +190,26 @@ class ApiService {
 
   // Get current user profile
   Future<Map<String, dynamic>> getCurrentUserProfile() async {
-    return _handleTokenRefresh(() async {
-      final token = await getAuthToken();
-      if (token.isEmpty) {
-        throw Exception('No authentication token found. Please log in again.');
-      }
+    final token = await getAuthToken();
+    if (token.isEmpty) {
+      throw Exception('No authentication token found. Please log in again.');
+    }
 
-      print('Fetching user profile with token: ${token.substring(0, 10)}...');
+    final response = await http.get(
+      Uri.parse(myProfileEndpoint),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
 
-      final response = await http.get(
-        Uri.parse(myProfileEndpoint),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-      );
-
-      print('Profile response status: ${response.statusCode}');
-
-      if (response.statusCode == 200) {
-        return jsonDecode(response.body);
-      } else if (response.statusCode == 401) {
-        throw Exception('Unauthorized: Invalid or expired token');
-      } else {
-        throw Exception('Failed to load profile: ${response.body}');
-      }
-    });
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else if (response.statusCode == 401) {
+      throw Exception('Unauthorized: Invalid or expired token');
+    } else {
+      throw Exception('Failed to load profile: ${response.body}');
+    }
   }
 
   // Get public profile by username
@@ -416,7 +391,6 @@ class ApiService {
       final refresh = prefs.getString('refresh_token');
 
       if (refresh == null) {
-        print('No refresh token found');
         return false;
       }
 
@@ -429,7 +403,6 @@ class ApiService {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         if (data['access'] == null) {
-          print('No access token in refresh response');
           return false;
         }
 
@@ -438,18 +411,14 @@ class ApiService {
         // Verify token was saved
         final savedToken = prefs.getString('access_token');
         if (savedToken == null) {
-          print('Failed to save new access token');
           return false;
         }
 
         return true;
       } else {
-        print(
-            'Token refresh failed with status ${response.statusCode}: ${response.body}');
         return false;
       }
     } catch (e) {
-      print('Error refreshing token: $e');
       return false;
     }
   }
@@ -462,16 +431,12 @@ class ApiService {
         return await request();
       } catch (e) {
         if (e.toString().contains('401') || e.toString().contains('403')) {
-          print('Token expired or invalid, attempting refresh...');
-
           // Try to refresh the token
           final refreshed = await refreshToken();
           if (refreshed) {
-            print('Token refreshed successfully, retrying request...');
             // Retry the request with the new token
             return await request();
           } else {
-            print('Token refresh failed, clearing tokens...');
             // Clear tokens if refresh failed
             final prefs = await SharedPreferences.getInstance();
             await prefs.remove('access_token');
@@ -482,7 +447,6 @@ class ApiService {
         rethrow;
       }
     } catch (e) {
-      print('Error in _handleTokenRefresh: $e');
       rethrow;
     }
   }
@@ -495,8 +459,6 @@ class ApiService {
         throw Exception('No authentication token found. Please log in again.');
       }
 
-      print('Fetching posts with token: ${token.substring(0, 10)}...');
-
       final response = await http.get(
         Uri.parse(postsEndpoint),
         headers: {
@@ -504,8 +466,6 @@ class ApiService {
           'Authorization': 'Bearer $token',
         },
       );
-
-      print('Posts response status: ${response.statusCode}');
 
       if (response.statusCode == 200) {
         return jsonDecode(response.body);
@@ -951,8 +911,6 @@ class ApiService {
         'Authorization': 'Bearer $token',
       },
     );
-
-    print('Getting comments for post $postId: ${response.statusCode}');
 
     if (response.statusCode == 200) {
       return jsonDecode(response.body);

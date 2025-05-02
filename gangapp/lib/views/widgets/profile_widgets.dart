@@ -4,6 +4,8 @@ import 'package:transparent_image/transparent_image.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'dart:typed_data';
 import 'dart:io';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class ProfileWidgets {
   static Widget buildTextField(
@@ -198,7 +200,18 @@ class ProfileWidgets {
                           style:
                               TextStyle(fontSize: 16, color: Colors.grey[800]),
                           decoration: InputDecoration(
-                            border: InputBorder.none,
+                            prefixIcon: null,
+                            filled: false,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide:
+                                  BorderSide(color: Colors.grey.shade300),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide:
+                                  BorderSide(color: primaryColor, width: 2),
+                            ),
                             contentPadding: EdgeInsets.symmetric(
                               horizontal: 8,
                               vertical: 12,
@@ -260,97 +273,124 @@ class ProfileWidgets {
     return Icon(Icons.person_rounded, size: size, color: Colors.white);
   }
 
+  static Widget buildProfileHeader(
+    String? profilePictureUrl,
+    String fullName,
+    String username,
+    Color primaryColor,
+  ) {
+    return Container(
+      padding: EdgeInsets.symmetric(vertical: 20),
+      decoration: BoxDecoration(
+        color: primaryColor,
+        borderRadius: BorderRadius.only(
+          bottomLeft: Radius.circular(20),
+          bottomRight: Radius.circular(20),
+        ),
+      ),
+      child: Column(
+        children: [
+          CircleAvatar(
+            radius: 50,
+            backgroundColor: Colors.white,
+            child: profilePictureUrl != null && profilePictureUrl.isNotEmpty
+                ? ClipOval(
+                    child: Image.network(
+                      profilePictureUrl,
+                      width: 100,
+                      height: 100,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Icon(Icons.person_rounded,
+                            size: 50, color: primaryColor);
+                      },
+                    ),
+                  )
+                : Icon(Icons.person_rounded, size: 50, color: primaryColor),
+          ),
+          SizedBox(height: 16),
+          Text(
+            fullName,
+            style: GoogleFonts.mukta(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+          SizedBox(height: 4),
+          Text(
+            '@$username',
+            style: GoogleFonts.mukta(
+              fontSize: 16,
+              color: Colors.white.withOpacity(0.8),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   static Widget buildBackgroundImage(
     File? backgroundImageFile,
     Uint8List? backgroundImageWeb,
     String? backgroundImageUrl,
     bool isEditing,
     Color primaryColor,
-    Function() onImagePickerTap,
+    Function() onImagePick,
   ) {
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        Container(
-          color: Colors.grey.shade300,
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      Colors.teal.shade200,
-                      Colors.teal.shade700,
-                    ],
-                  ),
-                ),
-              ),
-              if (backgroundImageFile != null && !kIsWeb)
-                Image.file(
-                  backgroundImageFile,
-                  fit: BoxFit.cover,
-                )
-              else if (backgroundImageWeb != null && kIsWeb)
-                Image.memory(
-                  backgroundImageWeb,
-                  fit: BoxFit.cover,
-                )
-              else if (backgroundImageUrl != null &&
-                  backgroundImageUrl.isNotEmpty)
-                FadeInImage.memoryNetwork(
-                  placeholder: kTransparentImage,
-                  image: backgroundImageUrl,
-                  fit: BoxFit.cover,
-                  imageErrorBuilder: (context, error, stackTrace) {
-                    return SizedBox.shrink();
-                  },
-                ),
-            ],
-          ),
-        ),
-        Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                Colors.transparent,
-                Colors.black.withOpacity(0.7),
-              ],
-            ),
-          ),
-        ),
-        if (isEditing)
-          Positioned(
-            right: 20,
-            bottom: 80,
-            child: GestureDetector(
-              onTap: onImagePickerTap,
-              child: Container(
-                padding: EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: primaryColor,
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.3),
-                      blurRadius: 8,
-                      offset: Offset(0, 3),
-                    ),
-                  ],
-                ),
-                child: Icon(
-                  Icons.add_photo_alternate,
-                  color: Colors.white,
-                  size: 24,
-                ),
+    return Container(
+      height: 200,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          if (backgroundImageFile != null)
+            Image.file(
+              backgroundImageFile,
+              fit: BoxFit.cover,
+              alignment: Alignment.center,
+            )
+          else if (backgroundImageWeb != null)
+            Image.memory(
+              backgroundImageWeb,
+              fit: BoxFit.cover,
+              alignment: Alignment.center,
+            )
+          else if (backgroundImageUrl != null && backgroundImageUrl.isNotEmpty)
+            Image.network(
+              backgroundImageUrl,
+              fit: BoxFit.cover,
+              alignment: Alignment.center,
+              errorBuilder: (context, error, stackTrace) {
+                return Container(color: primaryColor);
+              },
+            )
+          else
+            Container(color: primaryColor),
+          Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.transparent,
+                  Colors.black.withOpacity(0.7),
+                ],
+                stops: [0.4, 1.0],
               ),
             ),
           ),
-      ],
+          if (isEditing)
+            Positioned(
+              right: 16,
+              bottom: 16,
+              child: FloatingActionButton.small(
+                onPressed: onImagePick,
+                backgroundColor: primaryColor,
+                child: Icon(Icons.camera_alt, color: Colors.white),
+              ),
+            ),
+        ],
+      ),
     );
   }
 }

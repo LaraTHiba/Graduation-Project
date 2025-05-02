@@ -567,7 +567,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         if (imageUrl != null && imageUrl.toString().isNotEmpty)
                           Image.network(
                             imageUrl,
-                            fit: BoxFit.cover,
+                            fit: BoxFit.contain,
                             errorBuilder: (context, error, stackTrace) {
                               return Container(
                                 color: Colors.grey[200],
@@ -786,14 +786,14 @@ class _ProfilePageState extends State<ProfilePage> {
                                 Center(
                                   child: Stack(
                                     children: [
-                                      GestureDetector(
-                                        onTap: _isEditing
-                                            ? () =>
-                                                _showImagePickerOptions(true)
-                                            : null,
-                                        child: Material(
-                                          elevation: 4,
-                                          shape: CircleBorder(),
+                                      Material(
+                                        elevation: 4,
+                                        shape: CircleBorder(),
+                                        child: GestureDetector(
+                                          onTap: _isEditing
+                                              ? () =>
+                                                  _showImagePickerOptions(true)
+                                              : null,
                                           child: Container(
                                             width: 124,
                                             height: 124,
@@ -812,7 +812,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                                   ? Image.network(
                                                       _userDetails[
                                                           'profile_picture_url'],
-                                                      fit: BoxFit.cover,
+                                                      fit: BoxFit.contain,
                                                       errorBuilder: (context,
                                                           error, stackTrace) {
                                                         return Container(
