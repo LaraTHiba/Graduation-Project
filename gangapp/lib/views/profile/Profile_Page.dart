@@ -11,6 +11,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'dart:typed_data';
 import 'package:transparent_image/transparent_image.dart';
 import '../widgets/profile_widgets.dart';
+import '../groups/groups.dart';
 
 class ProfilePage extends StatefulWidget {
   final String? username;
@@ -946,8 +947,11 @@ class _ProfilePageState extends State<ProfilePage> {
                                     context, '/home');
                                 break;
                               case 1:
-                                Navigator.pushReplacementNamed(
-                                    context, '/groups');
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => const GroupsPage()),
+                                );
                                 break;
                               case 2:
                                 Navigator.pushReplacementNamed(

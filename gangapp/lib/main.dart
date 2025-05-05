@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'views/auth/Login_views.dart';
 import 'views/home/Home_Page.dart';
+import 'views/groups/groups.dart';
 import 'controllers/auth_controller.dart';
 
 void main() {
@@ -22,6 +23,8 @@ class MyApp extends StatelessWidget {
       ),
       routes: {
         '/home': (context) => HomePage(),
+        '/groups': (context) => const GroupsPage(),
+        '/login': (context) => LoginPage(),
       },
       home: FutureBuilder<bool>(
         future: _authController.isLoggedIn(),

@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'Login_views.dart';
 import '../../controllers/auth_controller.dart';
+import '../../utils/email_validator.dart';
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});
@@ -174,13 +175,8 @@ class _SignUpPageState extends State<SignUpPage> {
                     ),
                   ),
                   validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter your email';
-                    }
-                    if (!value.contains('@') || !value.contains('.')) {
-                      return 'Please enter a valid email';
-                    }
-                    return null;
+                    return EmailValidator.validateCompanyEmail(
+                        value, _selectedUserType);
                   },
                 ),
                 SizedBox(height: 16),
