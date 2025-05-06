@@ -8,6 +8,7 @@ from core.models.comments import Comment
 from core.serializers.posts import PostSerializer, CommentSerializer
 from core.models.interests import Interest
 from core.serializers.interests import InterestSerializer
+from django.http import Http404
 
 
 class PostListCreateView(generics.ListCreateAPIView):
@@ -143,6 +144,12 @@ class CommentDetailView(generics.RetrieveUpdateDestroyAPIView):
     def get_queryset(self):
         # Include both deleted and non-deleted comments for retrieval
         return Comment.objects.all()
+    
+    def get_object(self):
+        obj = super().get_object()
+        if obj.is_deleted:
+            raise Http404("Comment not found")
+        return obj
     
     def perform_update(self, serializer):
         comment = self.get_object()

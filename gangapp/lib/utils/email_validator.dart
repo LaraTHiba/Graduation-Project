@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import '../../utils/email_validator.dart';
 
+/// Utility class for email validation with specific rules for company emails
 class EmailValidator {
-  // List of common company email domains
-  static const List<String> _commonCompanyDomains = [
+  /// List of common personal email domains
+  static const List<String> _commonPersonalDomains = [
     'gmail.com',
     'yahoo.com',
     'outlook.com',
@@ -16,8 +16,8 @@ class EmailValidator {
     'yandex.com'
   ];
 
-  // List of Palestinian domains
-  static final List<String> palestinianDomains = [
+  /// List of Palestinian domains
+  static const List<String> _palestinianDomains = [
     'palestine.ps',
     'palestine.com',
     'palestine.net',
@@ -56,8 +56,8 @@ class EmailValidator {
     'pa.net'
   ];
 
-  // List of company-related terms
-  static final List<String> companyTerms = [
+  /// List of company-related terms
+  static const List<String> _companyTerms = [
     'company',
     'corp',
     'inc',
@@ -69,71 +69,31 @@ class EmailValidator {
     'co'
   ];
 
-  // Validate if the email is a company email
+  /// Basic email format validation regex
+  static final RegExp _emailRegex = RegExp(
+    r'^[a-zA-Z0-9.]+@[a-zA-Z0-9]+\.[a-zA-Z]+',
+  );
+
+  /// Validates if the email is a company email
   static bool isCompanyEmail(String email) {
     if (email.isEmpty) return false;
+    if (!_emailRegex.hasMatch(email)) return false;
 
-    // Basic email format validation
-    final emailRegex = RegExp(
-      r'^[a-zA-Z0-9.]+@[a-zA-Z0-9]+\.[a-zA-Z]+',
-    );
-    if (!emailRegex.hasMatch(email)) return false;
-
-    // Extract domain from email
     final domain = email.split('@')[1].toLowerCase();
-
-    // Check if the domain is not in the list of common personal email domains
-    return !_commonCompanyDomains.contains(domain);
+    return !_commonPersonalDomains.contains(domain);
   }
 
-  // Get validation message for the email
-  static String? getValidationMessage(String email) {
-    if (email.isEmpty) {
-      return 'Please enter an email address';
-    }
-
-    if (!isCompanyEmail(email)) {
-      return 'Please use your company email address';
-    }
-
-    return null;
-  }
-
-  // Validate email and return error message if invalid
-  static String? validateEmail(String email) {
-    final message = getValidationMessage(email);
-    if (message != null) {
-      return message;
-    }
-    return null;
-  }
-
-  // Check if email is valid for company registration
-  static bool isValidForCompanyRegistration(String email) {
-    return isCompanyEmail(email);
-  }
-
-  // Get suggestions for company email domains
-  static List<String> getCompanyDomainSuggestions(String partialDomain) {
-    if (partialDomain.isEmpty) return [];
-
-    return _commonCompanyDomains
-        .where((domain) => domain.contains(partialDomain.toLowerCase()))
-        .toList();
-  }
-
-  // Validate company email with Palestinian domain requirements
+  /// Validates company email with Palestinian domain requirements
   static String? validateCompanyEmail(String? value, String userType) {
     if (value == null || value.isEmpty) {
       return 'Email is required';
     }
 
     if (userType != 'Company') {
-      return null; // No special validation for non-company users
+      return null;
     }
 
-    // Check email format
-    if (!value.contains('@')) {
+    if (!_emailRegex.hasMatch(value)) {
       return 'Invalid email format';
     }
 
@@ -145,21 +105,27 @@ class EmailValidator {
     final username = parts[0].toLowerCase();
     final domain = parts[1].toLowerCase();
 
-    // Check domain
-    if (!palestinianDomains.any((d) => domain.endsWith(d))) {
+    if (!_palestinianDomains.any((d) => domain.endsWith(d))) {
       return 'Company users must use a Palestinian company email domain';
     }
 
-    // Check for company terms in username
-    if (!companyTerms.any((term) => username.contains(term))) {
+    if (!_companyTerms.any((term) => username.contains(term))) {
       return 'Company email username should contain company-related terms (e.g., company, corp, inc)';
     }
 
-    // Check email length
     if (value.length > 254) {
       return 'Email address is too long';
     }
 
     return null;
+  }
+
+  /// Gets suggestions for company email domains based on partial input
+  static List<String> getCompanyDomainSuggestions(String partialDomain) {
+    if (partialDomain.isEmpty) return [];
+
+    return _commonPersonalDomains
+        .where((domain) => domain.contains(partialDomain.toLowerCase()))
+        .toList();
   }
 }

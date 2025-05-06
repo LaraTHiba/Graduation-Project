@@ -12,27 +12,33 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  final loginController = TextEditingController();
-  final passController = TextEditingController();
-  bool passToggle = true;
+  final _formKey = GlobalKey<FormState>();
+  final _loginController = TextEditingController();
+  final _passController = TextEditingController();
+  final _authController = AuthController();
+  bool _passToggle = true;
   bool _isLoading = false;
-
-  final AuthController _authController = AuthController();
 
   Future<void> _loginWithDjango(String username, String password) async {
     setState(() => _isLoading = true);
 
     try {
       await _authController.login(username, password);
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => HomePage()),
-      );
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const HomePage()),
+        );
+      }
     } catch (e) {
-      _showErrorDialog(
-          "Login Failed", "Invalid credentials. Please try again.");
+      if (mounted) {
+        _showErrorDialog(
+            "Login Failed", "Invalid credentials. Please try again.");
+      }
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -52,9 +58,11 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  void _login() async {
-    final username = loginController.text;
-    final password = passController.text;
+  void _login() {
+    if (!_formKey.currentState!.validate()) return;
+
+    final username = _loginController.text;
+    final password = _passController.text;
 
     if (username.isEmpty || password.isEmpty) {
       _showErrorDialog(
@@ -62,7 +70,14 @@ class _LoginPageState extends State<LoginPage> {
       return;
     }
 
-    await _loginWithDjango(username, password);
+    _loginWithDjango(username, password);
+  }
+
+  @override
+  void dispose() {
+    _loginController.dispose();
+    _passController.dispose();
+    super.dispose();
   }
 
   @override
@@ -72,119 +87,86 @@ class _LoginPageState extends State<LoginPage> {
 
     return Scaffold(
       body: SingleChildScrollView(
-        child: Container(
-          width: size.width,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: size.width * 0.08),
-                child: Center(
+        child: Form(
+          key: _formKey,
+          child: Container(
+            width: size.width,
+            padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
                   child: Image.asset(
                     'assets/images/Logo.png',
                     width: 520,
                     height: 250,
                   ),
                 ),
-              ),
-              Padding(
-                padding: EdgeInsets.symmetric(
-                    horizontal: horizontalPadding, vertical: 3),
-                child: Text(
+                Text(
                   'SIGN IN',
                   style: GoogleFonts.mukta(
-                      color: const Color(0xFF006C5F),
-                      fontSize: 30,
-                      fontWeight: FontWeight.bold),
+                    color: const Color(0xFF006C5F),
+                    fontSize: 30,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 10),
-              Padding(
-                padding: EdgeInsets.symmetric(
-                    horizontal: horizontalPadding, vertical: 3),
-                child: TextFormField(
+                const SizedBox(height: 10),
+                TextFormField(
+                  controller: _loginController,
                   keyboardType: TextInputType.emailAddress,
-                  controller: loginController,
-                  decoration: InputDecoration(
-                    labelText: 'Login',
-                    labelStyle: TextStyle(color: Colors.grey[600]),
-                    prefixIcon: const Icon(Icons.email),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: const BorderSide(color: Colors.grey),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide:
-                          const BorderSide(color: Color(0xFF006C5F), width: 2),
-                    ),
-                    filled: true,
-                    fillColor: Colors.grey[50],
+                  decoration: _buildInputDecoration(
+                    'Login',
+                    Icons.email,
+                    null,
                   ),
+                  validator: (value) =>
+                      value?.isEmpty ?? true ? 'Please enter your login' : null,
                 ),
-              ),
-              const SizedBox(height: 10),
-              Padding(
-                padding: EdgeInsets.symmetric(
-                    horizontal: horizontalPadding, vertical: 3),
-                child: TextFormField(
-                  controller: passController,
-                  obscureText: passToggle,
-                  decoration: InputDecoration(
-                    labelText: 'Password',
-                    labelStyle: TextStyle(color: Colors.grey[600]),
-                    prefixIcon: const Icon(Icons.lock),
-                    suffixIcon: InkWell(
-                      onTap: () => setState(() => passToggle = !passToggle),
-                      child: Icon(
-                          passToggle ? Icons.visibility : Icons.visibility_off),
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: const BorderSide(color: Colors.grey),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide:
-                          const BorderSide(color: Color(0xFF006C5F), width: 2),
-                    ),
-                    filled: true,
-                    fillColor: Colors.grey[50],
-                    contentPadding: const EdgeInsets.symmetric(
-                        vertical: 15, horizontal: 15),
-                  ),
-                ),
-              ),
-              Padding(
-                padding: EdgeInsets.symmetric(
-                    horizontal: horizontalPadding, vertical: 25),
-                child: TextButton(
-                  onPressed: _isLoading ? null : _login,
-                  child: Material(
-                    elevation: 10,
-                    borderRadius: BorderRadius.circular(8),
-                    child: Container(
-                      decoration: BoxDecoration(
-                          color: const Color(0xFF006C5F),
-                          borderRadius: BorderRadius.circular(8)),
-                      height: 50,
-                      child: Center(
-                          child: _isLoading
-                              ? const CircularProgressIndicator(
-                                  color: Colors.white)
-                              : Text(
-                                  'SIGN IN',
-                                  style: GoogleFonts.mukta(
-                                      fontSize: 20,
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold),
-                                )),
+                const SizedBox(height: 10),
+                TextFormField(
+                  controller: _passController,
+                  obscureText: _passToggle,
+                  decoration: _buildInputDecoration(
+                    'Password',
+                    Icons.lock,
+                    IconButton(
+                      icon: Icon(_passToggle
+                          ? Icons.visibility
+                          : Icons.visibility_off),
+                      onPressed: () =>
+                          setState(() => _passToggle = !_passToggle),
                     ),
                   ),
+                  validator: (value) => value?.isEmpty ?? true
+                      ? 'Please enter your password'
+                      : null,
                 ),
-              ),
-              Center(
-                child: Row(
+                const SizedBox(height: 25),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: _isLoading ? null : _login,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF006C5F),
+                      padding: const EdgeInsets.symmetric(vertical: 15),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: _isLoading
+                        ? const CircularProgressIndicator(color: Colors.white)
+                        : Text(
+                            'SIGN IN',
+                            style: GoogleFonts.mukta(
+                              fontSize: 20,
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text("Don't have an account?",
@@ -192,7 +174,8 @@ class _LoginPageState extends State<LoginPage> {
                     TextButton(
                       onPressed: () => Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => SignUpPage()),
+                        MaterialPageRoute(
+                            builder: (context) => const SignUpPage()),
                       ),
                       child: const Text(
                         "Sign Up",
@@ -204,11 +187,32 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                   ],
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
+    );
+  }
+
+  InputDecoration _buildInputDecoration(
+      String label, IconData prefixIcon, Widget? suffixIcon) {
+    return InputDecoration(
+      labelText: label,
+      labelStyle: TextStyle(color: Colors.grey[600]),
+      prefixIcon: Icon(prefixIcon),
+      suffixIcon: suffixIcon,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: const BorderSide(color: Colors.grey),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: const BorderSide(color: Color(0xFF006C5F), width: 2),
+      ),
+      filled: true,
+      fillColor: Colors.grey[50],
+      contentPadding: const EdgeInsets.symmetric(vertical: 15, horizontal: 15),
     );
   }
 }

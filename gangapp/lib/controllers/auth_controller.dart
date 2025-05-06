@@ -2,15 +2,23 @@ import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+/// Controller class for handling authentication-related operations
 class AuthController {
   final ApiService _apiService = ApiService();
 
-  // Login user
+  /// Attempts to log in a user with the provided credentials
+  /// Returns a Map containing the user data and token if successful
+  /// Throws an exception if login fails
   Future<Map<String, dynamic>> login(String username, String password) async {
+    if (username.isEmpty || password.isEmpty) {
+      throw Exception('Username and password cannot be empty');
+    }
     return await _apiService.login(username, password);
   }
 
-  // Register a new user
+  /// Registers a new user with the provided information
+  /// Returns a Map containing the user data if successful
+  /// Throws an exception if registration fails
   Future<Map<String, dynamic>> register({
     required String username,
     required String email,
@@ -21,6 +29,10 @@ class AuthController {
     String? phoneNumber,
     String? userType,
   }) async {
+    if (password != password2) {
+      throw Exception('Passwords do not match');
+    }
+
     final data = {
       'username': username,
       'email': email,
@@ -35,18 +47,28 @@ class AuthController {
     return await _apiService.register(data);
   }
 
-  // Request password reset email
+  /// Requests a password reset email for the provided email address
+  /// Returns true if the request was successful
+  /// Throws an exception if the request fails
   Future<bool> requestPasswordReset(String email) async {
+    if (email.isEmpty) {
+      throw Exception('Email cannot be empty');
+    }
     await _apiService.requestPasswordReset(email);
     return true;
   }
 
-  // Reset password with token
+  /// Resets the password using the provided token and new password
+  /// Returns true if the reset was successful
+  /// Throws an exception if the reset fails
   Future<bool> resetPassword({
     required String token,
     required String newPassword,
     required String newPassword2,
   }) async {
+    if (newPassword != newPassword2) {
+      throw Exception('New passwords do not match');
+    }
     await _apiService.resetPassword(
       token: token,
       newPassword: newPassword,
@@ -55,12 +77,17 @@ class AuthController {
     return true;
   }
 
-  // Change password (for logged-in users)
+  /// Changes the password for a logged-in user
+  /// Returns true if the change was successful
+  /// Throws an exception if the change fails
   Future<bool> changePassword({
     required String oldPassword,
     required String newPassword,
     required String newPassword2,
   }) async {
+    if (newPassword != newPassword2) {
+      throw Exception('New passwords do not match');
+    }
     await _apiService.changePassword(
       oldPassword: oldPassword,
       newPassword: newPassword,
@@ -69,14 +96,17 @@ class AuthController {
     return true;
   }
 
-  // Check if user is logged in
+  /// Checks if a user is currently logged in
+  /// Returns true if a valid token exists
   Future<bool> isLoggedIn() async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('access_token');
     return token != null && token.isNotEmpty;
   }
 
-  // Logout user
+  /// Logs out the current user
+  /// Returns true if logout was successful
+  /// Throws an exception if logout fails
   Future<bool> logout() async {
     return await _apiService.logout();
   }

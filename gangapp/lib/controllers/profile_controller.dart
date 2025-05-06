@@ -1,19 +1,17 @@
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
-import '../services/api_service.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:http/http.dart' as http;
-import 'dart:convert';
+import '../services/api_service.dart';
 
+/// Controller class for managing user profile operations
 class ProfileController {
   final ApiService _apiService = ApiService();
 
-  // Current user's username (cached)
+  /// Cached username of the current user
   String? _currentUsername;
 
-  // Get current user's username
+  /// Retrieves the current user's username, using cache if available
   Future<String?> getCurrentUsername() async {
     if (_currentUsername != null) {
       return _currentUsername;
@@ -21,42 +19,54 @@ class ProfileController {
 
     try {
       final profile = await _apiService.getCurrentUserProfile();
-      _currentUsername = profile['user']['username'];
+      _currentUsername = profile['user']['username'] as String;
       return _currentUsername;
     } catch (e) {
-      print('Error getting current username: $e');
+      debugPrint('Error getting current username: $e');
       return null;
     }
   }
 
-  // Check if profile is for current user
+  /// Checks if the given profile belongs to the current user
   Future<bool> isCurrentUserProfile(String username) async {
     final currentUsername = await getCurrentUsername();
     return currentUsername == username;
   }
 
-  // Get profile (handles both current user and other users)
+  /// Retrieves a user profile
+  ///
+  /// If [username] is null, returns the current user's profile
+  /// If [username] is provided, returns that user's public profile
+  /// Returns the current user's profile if the requested username matches the current user
   Future<Map<String, dynamic>> getProfile({String? username}) async {
     try {
       if (username == null) {
-        // Get current user's profile
         return await _apiService.getCurrentUserProfile();
-      } else {
-        // First check if the requested profile is the current user's
-        final currentUsername = await getCurrentUsername();
-        if (username == currentUsername) {
-          return await _apiService.getCurrentUserProfile();
-        } else {
-          // Get another user's profile
-          return await _apiService.getPublicProfile(username);
-        }
       }
+
+      final currentUsername = await getCurrentUsername();
+      if (username == currentUsername) {
+        return await _apiService.getCurrentUserProfile();
+      }
+
+      return await _apiService.getPublicProfile(username);
     } catch (e) {
       throw Exception('Failed to load profile: $e');
     }
   }
 
-  // Update user profile
+  /// Updates the current user's profile
+  ///
+  /// Handles both web and mobile platforms differently for image uploads
+  ///
+  /// [fullName] The user's full name
+  /// [bio] The user's biography
+  /// [location] The user's location
+  /// [dateOfBirth] The user's date of birth
+  /// [profilePicture] Profile picture file (mobile only)
+  /// [backgroundImage] Background image file (mobile only)
+  /// [profilePictureWeb] Profile picture bytes (web only)
+  /// [backgroundImageWeb] Background image bytes (web only)
   Future<Map<String, dynamic>> updateProfile({
     required String fullName,
     required String bio,
@@ -77,50 +87,22 @@ class ProfileController {
           profilePictureWeb: profilePictureWeb,
           backgroundImageWeb: backgroundImageWeb,
         );
-      } else {
-        return await _apiService.updateProfile(
-          fullName: fullName,
-          bio: bio,
-          location: location,
-          dateOfBirth: dateOfBirth,
-          profilePicture: profilePicture,
-          backgroundImage: backgroundImage,
-        );
       }
+
+      return await _apiService.updateProfile(
+        fullName: fullName,
+        bio: bio,
+        location: location,
+        dateOfBirth: dateOfBirth,
+        profilePicture: profilePicture,
+        backgroundImage: backgroundImage,
+      );
     } catch (e) {
       throw Exception('Failed to update profile: $e');
     }
   }
 
-  // Logout user
-  // Future<bool> logout() async {
-  //   final prefs = await SharedPreferences.getInstance();
-  //   final refreshToken = prefs.getString('refresh_token');
-  //
-  //   if (refreshToken == null) {
-  //     throw Exception('No refresh token found. User may not be logged in.');
-  //   }
-  //
-  //   try {
-  //     final response = await http.post(
-  //       Uri.parse('http://10.0.2.2:8000/api/auth/logout/'),
-  //       headers: {'Content-Type': 'application/json'},
-  //       body: jsonEncode({'refresh_token': refreshToken}),
-  //     );
-  //
-  //     if (response.statusCode == 200 || response.statusCode == 205) {
-  //       await prefs.remove('access_token');
-  //       await prefs.remove('refresh_token');
-  //       return true;
-  //     } else {
-  //       print("Logout failed: ${response.body}");
-  //       return false;
-  //     }
-  //   } catch (e) {
-  //     throw Exception("Failed to logout: $e");
-  //   }
-  // }
-
+  /// Logs out the current user and clears cached data
   Future<bool> logout() async {
     try {
       final result = await _apiService.logout();
@@ -133,19 +115,7 @@ class ProfileController {
     }
   }
 
-  // Delete user account
-  // Future<bool> deleteAccount() async {
-  //   try {
-  //     final result = await _apiService.deleteAccount();
-  //     if (result) {
-  //       _currentUsername = null;
-  //     }
-  //     return result;
-  //   } catch (e) {
-  //     throw Exception('Failed to delete account: $e');
-  //   }
-  // }
-
+  /// Retrieves posts made by a specific user
   Future<List<Map<String, dynamic>>> getUserPosts(String username) async {
     try {
       final response = await _apiService.getUserPosts(username);

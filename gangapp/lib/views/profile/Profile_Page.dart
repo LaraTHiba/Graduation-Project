@@ -12,6 +12,7 @@ import 'dart:typed_data';
 import 'package:transparent_image/transparent_image.dart';
 import '../widgets/profile_widgets.dart';
 import '../groups/groups.dart';
+import '../../utils/email_validator.dart';
 
 class ProfilePage extends StatefulWidget {
   final String? username;
@@ -56,10 +57,22 @@ class _ProfilePageState extends State<ProfilePage> {
   final Color _primaryColor = Color(0xFF006C5F);
   final Color _accentColor = Color(0xFF4CAF93);
 
+  String? _userType;
+  String? _userEmail;
+
   @override
   void initState() {
     super.initState();
     _checkUserAndLoadProfile();
+    _loadUserTypeAndEmail();
+  }
+
+  Future<void> _loadUserTypeAndEmail() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _userType = prefs.getString('user_type') ?? 'User';
+      _userEmail = prefs.getString('email') ?? '';
+    });
   }
 
   Future<void> _checkUserAndLoadProfile() async {
@@ -665,6 +678,14 @@ class _ProfilePageState extends State<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
+    final isCompanyWithCompanyEmail = (_userType == 'Company' &&
+            EmailValidator.isCompanyEmail(_userEmail ?? '')) ||
+        (_userType == 'Company' &&
+            (_userEmail == null || _userEmail?.isEmpty == true));
+
+    print(
+        'userType: $_userType, userEmail: $_userEmail, isCompanyWithCompanyEmail: $isCompanyWithCompanyEmail');
+
     return _isLoading
         ? Scaffold(
             backgroundColor: Colors.white,
@@ -939,26 +960,42 @@ class _ProfilePageState extends State<ProfilePage> {
                         height: 70,
                         color: _primaryColor,
                         child: BottomNavigationBar(
-                          currentIndex: 3,
+                          currentIndex: _userType == 'Company' ? 2 : 3,
                           onTap: (index) {
-                            switch (index) {
-                              case 0:
-                                Navigator.pushReplacementNamed(
-                                    context, '/home');
-                                break;
-                              case 1:
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (context) => const GroupsPage()),
-                                );
-                                break;
-                              case 2:
-                                Navigator.pushReplacementNamed(
-                                    context, '/explore');
-                                break;
-                              case 3:
-                                break;
+                            if (_userType == 'Company') {
+                              switch (index) {
+                                case 0:
+                                  Navigator.pushReplacementNamed(
+                                      context, '/home');
+                                  break;
+                                case 1:
+                                  Navigator.pushReplacementNamed(
+                                      context, '/explore');
+                                  break;
+                                case 2:
+                                  break;
+                              }
+                            } else {
+                              switch (index) {
+                                case 0:
+                                  Navigator.pushReplacementNamed(
+                                      context, '/home');
+                                  break;
+                                case 1:
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (context) =>
+                                            const GroupsPage()),
+                                  );
+                                  break;
+                                case 2:
+                                  Navigator.pushReplacementNamed(
+                                      context, '/explore');
+                                  break;
+                                case 3:
+                                  break;
+                              }
                             }
                           },
                           type: BottomNavigationBarType.fixed,
@@ -976,24 +1013,39 @@ class _ProfilePageState extends State<ProfilePage> {
                             fontSize: 12,
                             letterSpacing: 0.5,
                           ),
-                          items: [
-                            BottomNavigationBarItem(
-                              icon: Icon(Icons.home_rounded, size: 24),
-                              label: 'Home',
-                            ),
-                            BottomNavigationBarItem(
-                              icon: Icon(Icons.groups_rounded, size: 24),
-                              label: 'Groups',
-                            ),
-                            BottomNavigationBarItem(
-                              icon: Icon(Icons.explore_rounded, size: 24),
-                              label: 'Explore',
-                            ),
-                            BottomNavigationBarItem(
-                              icon: _buildProfileIcon(),
-                              label: 'Profile',
-                            ),
-                          ],
+                          items: isCompanyWithCompanyEmail
+                              ? [
+                                  const BottomNavigationBarItem(
+                                    icon: Icon(Icons.home_rounded, size: 24),
+                                    label: 'Home',
+                                  ),
+                                  const BottomNavigationBarItem(
+                                    icon: Icon(Icons.explore_rounded, size: 24),
+                                    label: 'Explore',
+                                  ),
+                                  BottomNavigationBarItem(
+                                    icon: _buildProfileIcon(),
+                                    label: 'Profile',
+                                  ),
+                                ]
+                              : [
+                                  const BottomNavigationBarItem(
+                                    icon: Icon(Icons.home_rounded, size: 24),
+                                    label: 'Home',
+                                  ),
+                                  const BottomNavigationBarItem(
+                                    icon: Icon(Icons.groups_rounded, size: 24),
+                                    label: 'Groups',
+                                  ),
+                                  const BottomNavigationBarItem(
+                                    icon: Icon(Icons.explore_rounded, size: 24),
+                                    label: 'Explore',
+                                  ),
+                                  BottomNavigationBarItem(
+                                    icon: _buildProfileIcon(),
+                                    label: 'Profile',
+                                  ),
+                                ],
                         ),
                       ),
                     ),

@@ -22,27 +22,20 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
       ),
       routes: {
-        '/home': (context) => HomePage(),
+        '/home': (context) => const HomePage(),
         '/groups': (context) => const GroupsPage(),
-        '/login': (context) => LoginPage(),
+        '/login': (context) => const LoginPage(),
       },
       home: FutureBuilder<bool>(
         future: _authController.isLoggedIn(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Scaffold(
-              body: Center(
-                child: CircularProgressIndicator(),
-              ),
+              body: Center(child: CircularProgressIndicator()),
             );
           }
 
-          final isLoggedIn = snapshot.data ?? false;
-          if (isLoggedIn) {
-            return HomePage();
-          } else {
-            return LoginPage();
-          }
+          return snapshot.data == true ? const HomePage() : const LoginPage();
         },
       ),
     );

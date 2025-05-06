@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../profile/Profile_Page.dart';
+import '../../utils/email_validator.dart';
 
 class GroupsPage extends StatefulWidget {
   const GroupsPage({super.key});
@@ -9,8 +11,51 @@ class GroupsPage extends StatefulWidget {
 }
 
 class _GroupsPageState extends State<GroupsPage> {
+  String? _userType;
+  String? _userEmail;
+  bool _accessDenied = false;
+  bool _checked = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkUserTypeAndRedirect();
+  }
+
+  Future<void> _checkUserTypeAndRedirect() async {
+    final prefs = await SharedPreferences.getInstance();
+    final userType = prefs.getString('user_type') ?? 'User';
+    final userEmail = prefs.getString('email') ?? '';
+    final isCompanyWithCompanyEmail =
+        userType == 'Company' && EmailValidator.isCompanyEmail(userEmail);
+    if (isCompanyWithCompanyEmail) {
+      setState(() {
+        _accessDenied = true;
+        _checked = true;
+      });
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        Navigator.pushReplacementNamed(context, '/home');
+      });
+    } else {
+      setState(() {
+        _userType = userType;
+        _userEmail = userEmail;
+        _checked = true;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (!_checked) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+    if (_accessDenied) {
+      // Show nothing while redirecting
+      return const Scaffold();
+    }
+    bool isCompanyWithCompanyEmail = _userType == 'Company' &&
+        EmailValidator.isCompanyEmail(_userEmail ?? '');
     return Scaffold(
       appBar: AppBar(
         title: Row(
@@ -141,22 +186,40 @@ class _GroupsPageState extends State<GroupsPage> {
             child: BottomNavigationBar(
               currentIndex: 1,
               onTap: (index) {
-                switch (index) {
-                  case 0:
-                    Navigator.pushReplacementNamed(context, '/home');
-                    break;
-                  case 1:
-                    break;
-                  case 2:
-                    Navigator.pushReplacementNamed(context, '/explore');
-                    break;
-                  case 3:
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => const ProfilePage()),
-                    );
-                    break;
+                if (isCompanyWithCompanyEmail) {
+                  switch (index) {
+                    case 0:
+                      Navigator.pushReplacementNamed(context, '/home');
+                      break;
+                    case 1:
+                      Navigator.pushReplacementNamed(context, '/explore');
+                      break;
+                    case 2:
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const ProfilePage()),
+                      );
+                      break;
+                  }
+                } else {
+                  switch (index) {
+                    case 0:
+                      Navigator.pushReplacementNamed(context, '/home');
+                      break;
+                    case 1:
+                      break;
+                    case 2:
+                      Navigator.pushReplacementNamed(context, '/explore');
+                      break;
+                    case 3:
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const ProfilePage()),
+                      );
+                      break;
+                  }
                 }
               },
               type: BottomNavigationBarType.fixed,
@@ -174,24 +237,39 @@ class _GroupsPageState extends State<GroupsPage> {
                 fontSize: 12,
                 letterSpacing: 0.5,
               ),
-              items: const [
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.home_rounded, size: 24),
-                  label: 'Home',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.groups_rounded, size: 24),
-                  label: 'Groups',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.explore_rounded, size: 24),
-                  label: 'Explore',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.person_rounded, size: 24),
-                  label: 'Profile',
-                ),
-              ],
+              items: isCompanyWithCompanyEmail
+                  ? [
+                      const BottomNavigationBarItem(
+                        icon: Icon(Icons.home_rounded, size: 24),
+                        label: 'Home',
+                      ),
+                      const BottomNavigationBarItem(
+                        icon: Icon(Icons.explore_rounded, size: 24),
+                        label: 'Explore',
+                      ),
+                      const BottomNavigationBarItem(
+                        icon: Icon(Icons.person_rounded, size: 24),
+                        label: 'Profile',
+                      ),
+                    ]
+                  : [
+                      const BottomNavigationBarItem(
+                        icon: Icon(Icons.home_rounded, size: 24),
+                        label: 'Home',
+                      ),
+                      const BottomNavigationBarItem(
+                        icon: Icon(Icons.groups_rounded, size: 24),
+                        label: 'Groups',
+                      ),
+                      const BottomNavigationBarItem(
+                        icon: Icon(Icons.explore_rounded, size: 24),
+                        label: 'Explore',
+                      ),
+                      const BottomNavigationBarItem(
+                        icon: Icon(Icons.person_rounded, size: 24),
+                        label: 'Profile',
+                      ),
+                    ],
             ),
           ),
         ),
