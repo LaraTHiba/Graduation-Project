@@ -11,7 +11,6 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'dart:typed_data';
 import 'package:transparent_image/transparent_image.dart';
 import '../widgets/profile_widgets.dart';
-import '../groups/groups.dart';
 import '../../utils/email_validator.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -678,13 +677,10 @@ class _ProfilePageState extends State<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
-    final isCompanyWithCompanyEmail = (_userType == 'Company' &&
-            EmailValidator.isCompanyEmail(_userEmail ?? '')) ||
-        (_userType == 'Company' &&
-            (_userEmail == null || _userEmail?.isEmpty == true));
+    final isCompanyUser = _userType?.toLowerCase() == 'company';
 
     print(
-        'userType: $_userType, userEmail: $_userEmail, isCompanyWithCompanyEmail: $isCompanyWithCompanyEmail');
+        'userType: $_userType, userEmail: $_userEmail, isCompanyUser: $isCompanyUser');
 
     return _isLoading
         ? Scaffold(
@@ -960,9 +956,10 @@ class _ProfilePageState extends State<ProfilePage> {
                         height: 70,
                         color: _primaryColor,
                         child: BottomNavigationBar(
-                          currentIndex: _userType == 'Company' ? 2 : 3,
+                          currentIndex: isCompanyUser ? 2 : 3,
                           onTap: (index) {
-                            if (_userType == 'Company') {
+                            if (isCompanyUser) {
+                              // Company: Home (0), Explore (1), Profile (2)
                               switch (index) {
                                 case 0:
                                   Navigator.pushReplacementNamed(
@@ -973,27 +970,25 @@ class _ProfilePageState extends State<ProfilePage> {
                                       context, '/explore');
                                   break;
                                 case 2:
+                                  // Already on profile
                                   break;
                               }
                             } else {
+                              // User: Home (0), Groups (1), Explore (2), Profile (3)
                               switch (index) {
                                 case 0:
                                   Navigator.pushReplacementNamed(
                                       context, '/home');
                                   break;
                                 case 1:
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                        builder: (context) =>
-                                            const GroupsPage()),
-                                  );
+                                  // Groups: do nothing or implement navigation
                                   break;
                                 case 2:
                                   Navigator.pushReplacementNamed(
                                       context, '/explore');
                                   break;
                                 case 3:
+                                  // Already on profile
                                   break;
                               }
                             }
@@ -1013,36 +1008,36 @@ class _ProfilePageState extends State<ProfilePage> {
                             fontSize: 12,
                             letterSpacing: 0.5,
                           ),
-                          items: isCompanyWithCompanyEmail
+                          items: isCompanyUser
                               ? [
-                                  const BottomNavigationBarItem(
-                                    icon: Icon(Icons.home_rounded, size: 24),
+                                  BottomNavigationBarItem(
+                                    icon: Icon(Icons.home_rounded),
                                     label: 'Home',
                                   ),
-                                  const BottomNavigationBarItem(
-                                    icon: Icon(Icons.explore_rounded, size: 24),
+                                  BottomNavigationBarItem(
+                                    icon: Icon(Icons.explore_rounded),
                                     label: 'Explore',
                                   ),
                                   BottomNavigationBarItem(
-                                    icon: _buildProfileIcon(),
+                                    icon: Icon(Icons.person_rounded),
                                     label: 'Profile',
                                   ),
                                 ]
                               : [
-                                  const BottomNavigationBarItem(
-                                    icon: Icon(Icons.home_rounded, size: 24),
+                                  BottomNavigationBarItem(
+                                    icon: Icon(Icons.home_rounded),
                                     label: 'Home',
                                   ),
-                                  const BottomNavigationBarItem(
-                                    icon: Icon(Icons.groups_rounded, size: 24),
+                                  BottomNavigationBarItem(
+                                    icon: Icon(Icons.group_rounded),
                                     label: 'Groups',
                                   ),
-                                  const BottomNavigationBarItem(
-                                    icon: Icon(Icons.explore_rounded, size: 24),
+                                  BottomNavigationBarItem(
+                                    icon: Icon(Icons.explore_rounded),
                                     label: 'Explore',
                                   ),
                                   BottomNavigationBarItem(
-                                    icon: _buildProfileIcon(),
+                                    icon: Icon(Icons.person_rounded),
                                     label: 'Profile',
                                   ),
                                 ],

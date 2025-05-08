@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import '../profile/Profile_Page.dart';
 import '../widgets/create_post_dialog.dart';
 import '../widgets/home_bottom_nav.dart';
+import '../widgets/pro_company_request_dialog.dart';
 import '../../controllers/home_controller.dart';
 import '../../models/post.dart';
 import '../../views/widgets/Home_widget.dart';
 import '../../views/comment_screen.dart';
+import '../../utils/email_validator.dart';
 
 /// Main home page of the application
 class HomePage extends StatefulWidget {
@@ -60,6 +62,11 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _createPost(String title, String content, dynamic image) async {
     try {
+      String filename = image.path.split('/').last;
+      if (filename.isEmpty || filename == 'null' || filename == 'None') {
+        final timestamp = DateTime.now().millisecondsSinceEpoch;
+        filename = 'post_image_$timestamp.jpg';
+      }
       await _homeController.createPost(
         title: title,
         content: content,
@@ -93,13 +100,40 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  void _showProCompanyRequestDialog() {
+    showDialog(
+      context: context,
+      barrierColor: Colors.black54,
+      builder: (context) => const ProCompanyRequestDialog(),
+    );
+  }
+
   void _onTabSelected(int index) {
     setState(() => _currentIndex = index);
 
-    if (_homeController.shouldNavigate(index, _userType)) {
-      final route = _homeController.getRouteForTab(index);
-      if (route != null) {
-        Navigator.pushNamed(context, route);
+    final isCompanyUser = _userType == 'Company';
+
+    // Map the index to the correct action
+    if (isCompanyUser) {
+      // Company: Home (0), Explore (1), Profile (2)
+      if (index == 0) {
+        // Home: do nothing or refresh
+      } else if (index == 1) {
+        Navigator.pushNamed(context, '/explore');
+      } else if (index == 2) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => ProfilePage()),
+        ).then((_) => _fetchUserProfile());
+      }
+    } else {
+      // User: Home (0), Groups (1), Explore (2), Profile (3)
+      if (index == 0) {
+        // Home: do nothing or refresh
+      } else if (index == 1) {
+        // Groups: (if you have a groups page, otherwise do nothing)
+      } else if (index == 2) {
+        Navigator.pushNamed(context, '/explore');
       } else if (index == 3) {
         Navigator.push(
           context,
@@ -120,6 +154,59 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  List<Widget> _buildAppBarActions() {
+    final isCompanyUser = _userType == 'Company';
+
+    final actions = <Widget>[
+      IconButton(
+        icon: const Icon(Icons.notifications_rounded),
+        onPressed: () {
+          // TODO: Implement notifications
+        },
+      ),
+    ];
+
+    if (isCompanyUser) {
+      actions.insert(
+        0,
+        Container(
+          margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+          decoration: BoxDecoration(
+            color: const Color(0xFF006C5F), // App primary color
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.18),
+                blurRadius: 8,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: TextButton.icon(
+            icon: const Icon(Icons.business_rounded, color: Colors.white),
+            label: const Text(
+              'Pro-Company',
+              style:
+                  TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            ),
+            onPressed: _showProCompanyRequestDialog,
+            style: TextButton.styleFrom(
+              backgroundColor: Colors.transparent, // Use container color
+              shadowColor: Colors.transparent,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+                side: BorderSide.none, // No border
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    return actions;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -127,6 +214,8 @@ class _HomePageState extends State<HomePage> {
         title: const Text('Home'),
         backgroundColor: const Color(0xFF006C5F),
         foregroundColor: Colors.white,
+        actions: _buildAppBarActions(),
+        toolbarHeight: 70,
       ),
       body: RefreshIndicator(
         onRefresh: _refreshPosts,
@@ -180,7 +269,7 @@ class _HomePageState extends State<HomePage> {
         child: const Icon(Icons.add, color: Colors.white),
       ),
       bottomNavigationBar: HomeBottomNav(
-        currentIndex: _currentIndex,
+        currentIndex: _userType == 'Company' ? 2 : 3,
         profileImageUrl: _profileImageUrl,
         isLoadingProfile: _isLoadingProfile,
         userType: _userType,

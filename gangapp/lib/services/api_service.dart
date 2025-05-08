@@ -74,6 +74,7 @@ class ApiService {
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
+      print('Login response: $data'); // Debug print
 
       if (data['access'] == null || data['refresh'] == null) {
         throw Exception('Invalid response format: missing tokens');
@@ -83,6 +84,11 @@ class ApiService {
       await prefs.setString('access_token', data['access']);
       await prefs.setString('refresh_token', data['refresh']);
       await prefs.setString('username', username);
+
+      // Save user_type if present in response
+      if (data['user'] != null && data['user']['user_type'] != null) {
+        await prefs.setString('user_type', data['user']['user_type']);
+      }
 
       return data;
     } else {

@@ -29,6 +29,32 @@ class HomeBottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isCompanyUser = userType == 'Company';
+    final items = <BottomNavigationBarItem>[
+      const BottomNavigationBarItem(
+        icon: Icon(Icons.home_rounded),
+        label: 'Home',
+      ),
+      if (!isCompanyUser)
+        const BottomNavigationBarItem(
+          icon: Icon(Icons.group_rounded),
+          label: 'Groups',
+        ),
+      const BottomNavigationBarItem(
+        icon: Icon(Icons.explore_rounded),
+        label: 'Explore',
+      ),
+      BottomNavigationBarItem(
+        icon: ProfileIcon(
+          imageUrl: profileImageUrl,
+          isLoading: isLoadingProfile,
+          size: 26,
+          iconColor: Colors.white,
+        ),
+        label: 'Profile',
+      ),
+    ];
+
     return BottomNavigationBar(
       currentIndex: currentIndex,
       onTap: onTabSelected,
@@ -36,28 +62,7 @@ class HomeBottomNav extends StatelessWidget {
       backgroundColor: const Color(0xFF006C5F),
       selectedItemColor: Colors.white,
       unselectedItemColor: Colors.white70,
-      items: [
-        const BottomNavigationBarItem(
-          icon: Icon(Icons.home_rounded),
-          label: 'Home',
-        ),
-        if (userType != 'Company')
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.group_rounded),
-            label: 'Groups',
-          ),
-        const BottomNavigationBarItem(
-          icon: Icon(Icons.explore_rounded),
-          label: 'Explore',
-        ),
-        BottomNavigationBarItem(
-          icon: ProfileIcon(
-            imageUrl: profileImageUrl,
-            isLoading: isLoadingProfile,
-          ),
-          label: 'Profile',
-        ),
-      ],
+      items: items,
     );
   }
 }

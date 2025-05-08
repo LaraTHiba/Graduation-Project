@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'views/auth/Login_views.dart';
 import 'views/home/Home_Page.dart';
-import 'views/groups/groups.dart';
+// import 'views/groups/groups.dart';
 import 'controllers/auth_controller.dart';
 
 void main() {
@@ -23,7 +23,7 @@ class MyApp extends StatelessWidget {
       ),
       routes: {
         '/home': (context) => const HomePage(),
-        '/groups': (context) => const GroupsPage(),
+        // '/groups': (context) => const GroupsPage(),
         '/login': (context) => const LoginPage(),
       },
       home: FutureBuilder<bool>(
