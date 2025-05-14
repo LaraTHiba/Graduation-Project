@@ -8,12 +8,13 @@ User = get_user_model()
 class CommentSerializer(serializers.ModelSerializer):
     username = serializers.SerializerMethodField()
     image_url = serializers.SerializerMethodField()
+    replies = serializers.SerializerMethodField()
     
     class Meta:
         model = Comment
         fields = ['id', 'user', 'username', 'content', 'parent_comment', 'created_at', 
-                 'updated_at', 'image', 'image_url', 'is_deleted']
-        read_only_fields = ['id', 'created_at', 'updated_at', 'username', 'image_url']
+                 'updated_at', 'image', 'image_url', 'is_deleted', 'replies']
+        read_only_fields = ['id', 'created_at', 'updated_at', 'username', 'image_url', 'replies']
     
     def get_username(self, obj):
         return obj.user.username
@@ -25,6 +26,12 @@ class CommentSerializer(serializers.ModelSerializer):
                 return request.build_absolute_uri(obj.image.url)
             return obj.image.url
         return None
+
+    def get_replies(self, obj):
+        # Get all non-deleted replies for this comment
+        replies = obj.replies.filter(is_deleted=False).order_by('created_at')
+        serializer = CommentSerializer(replies, many=True, context=self.context)
+        return serializer.data
 
 class PostSerializer(serializers.ModelSerializer):
     username = serializers.SerializerMethodField()
@@ -53,7 +60,7 @@ class PostSerializer(serializers.ModelSerializer):
         return obj.image_url  # Return the URL string if using the URL field
     
     def get_comments(self, obj):
-        # Filter out deleted comments
+        # Get all non-deleted top-level comments
         comments = obj.comments.filter(is_deleted=False, parent_comment=None).order_by('-created_at')
         serializer = CommentSerializer(comments, many=True, context=self.context)
         return serializer.data 

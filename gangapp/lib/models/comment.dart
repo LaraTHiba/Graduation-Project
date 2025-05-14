@@ -62,6 +62,16 @@ class Comment {
 
   /// Creates a Comment instance from a JSON map
   factory Comment.fromJson(Map<String, dynamic> json) {
+    // Parse replies if they exist
+    List<Comment>? parsedReplies;
+    if (json['replies'] != null) {
+      parsedReplies = (json['replies'] as List)
+          .map((reply) => Comment.fromJson(reply as Map<String, dynamic>))
+          .toList();
+      // Sort replies by creation date
+      parsedReplies.sort((a, b) => a.createdAt.compareTo(b.createdAt));
+    }
+
     return Comment(
       id: json['id'] as int,
       user: json['user'] as int,
@@ -73,11 +83,7 @@ class Comment {
       parentComment: json['parent_comment'] as int?,
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
-      replies: json['replies'] != null
-          ? (json['replies'] as List)
-              .map((reply) => Comment.fromJson(reply as Map<String, dynamic>))
-              .toList()
-          : null,
+      replies: parsedReplies,
       isDeleted: json['is_deleted'] as bool? ?? false,
     );
   }

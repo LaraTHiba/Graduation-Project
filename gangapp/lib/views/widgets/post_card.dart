@@ -474,6 +474,7 @@ class _PostCardState extends State<PostCard>
                   createdAt: DateTime.parse(response['created_at']),
                   updatedAt: DateTime.parse(response['updated_at']),
                   imageUrl: response['image_url'],
+                  parentComment: parentComment.id,
                 );
 
                 // Update the parent comment's replies list
@@ -483,6 +484,9 @@ class _PostCardState extends State<PostCard>
                       parentComment.replies = [];
                     }
                     parentComment.replies!.add(newReply);
+                    // Sort replies by creation date
+                    parentComment.replies!
+                        .sort((a, b) => a.createdAt.compareTo(b.createdAt));
                   });
                 }
 
@@ -507,10 +511,16 @@ class _PostCardState extends State<PostCard>
         final isCurrentUser = currentUsername == reply.username;
 
         return Container(
-          margin: EdgeInsets.only(left: 30, bottom: 8),
+          margin: EdgeInsets.only(left: 40, bottom: 8),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Container(
+                width: 2,
+                height: 40,
+                color: Colors.grey[300],
+                margin: EdgeInsets.only(right: 12),
+              ),
               _buildAvatar(reply.username, isReply: true),
               SizedBox(width: 8),
               Expanded(
