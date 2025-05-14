@@ -995,7 +995,7 @@ class _PostCardState extends State<PostCard>
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(
-                        '${widget.post.comments.length}',
+                        '${_getTotalCommentCount()}',
                         style: TextStyle(
                           color: _primaryColor,
                           fontWeight: FontWeight.bold,
@@ -1378,5 +1378,15 @@ class _PostCardState extends State<PostCard>
     } else {
       return 'Just now';
     }
+  }
+
+  int _getTotalCommentCount() {
+    int count = widget.post.comments.length;
+    for (final comment in widget.post.comments) {
+      if (comment.replies != null) {
+        count += comment.replies!.length;
+      }
+    }
+    return count;
   }
 }
