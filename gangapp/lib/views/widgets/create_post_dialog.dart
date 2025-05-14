@@ -3,27 +3,42 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
+import '../../languages/language.dart';
+import '../../models/post.dart';
 
 /// Dialog widget for creating new posts
 class CreatePostDialog extends StatefulWidget {
   /// Callback function when a post is created
-  final Function(String title, String content, dynamic image) onPostCreated;
+  final Function(Post) onPostCreated;
+  final Post? postToEdit;
 
   const CreatePostDialog({
-    super.key,
+    Key? key,
     required this.onPostCreated,
-  });
+    this.postToEdit,
+  }) : super(key: key);
 
   @override
   State<CreatePostDialog> createState() => _CreatePostDialogState();
 }
 
 class _CreatePostDialogState extends State<CreatePostDialog> {
+  final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _contentController = TextEditingController();
-  File? _selectedImage;
-  Uint8List? _webImage;
+  String? _imageUrl;
   bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.postToEdit != null) {
+      _titleController.text = widget.postToEdit!.title;
+      _contentController.text = widget.postToEdit!.content;
+      _imageUrl = widget.postToEdit!.imageUrl;
+    }
+  }
 
   @override
   void dispose() {
@@ -32,271 +47,207 @@ class _CreatePostDialogState extends State<CreatePostDialog> {
     super.dispose();
   }
 
-  Future<void> _pickImage() async {
-    try {
-      final picker = ImagePicker();
-      final pickedFile = await picker.pickImage(source: ImageSource.gallery);
-
-      if (pickedFile != null) {
-        if (kIsWeb) {
-          final bytes = await pickedFile.readAsBytes();
-          setState(() => _webImage = bytes);
-        } else {
-          setState(() => _selectedImage = File(pickedFile.path));
-        }
-      }
-    } catch (e) {
-      debugPrint('Error picking image: $e');
-    }
+  Future<void> _handleImageUpload() async {
+    // Implement image upload logic here
   }
 
-  void _removeImage() {
-    setState(() {
-      _selectedImage = null;
-      _webImage = null;
-    });
+  void _showSnackBar(String message, {bool isError = false}) {
+    final language = context.read<Language>();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              isError
+                  ? Icons.error_outline_rounded
+                  : Icons.check_circle_rounded,
+              color: Colors.white,
+            ),
+            const SizedBox(width: 8),
+            Flexible(
+              child: Text(
+                message,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+        backgroundColor: isError ? Colors.red[400] : const Color(0xFF006C5F),
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.all(16),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+    );
   }
 
-  Future<void> _createPost() async {
-    if (_titleController.text.isEmpty) {
-      _showError('Please enter a title');
-      return;
-    }
-
-    if (_contentController.text.isEmpty) {
-      _showError('Please enter content');
-      return;
-    }
+  Future<void> _handleSubmit() async {
+    if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
 
     try {
-      await widget.onPostCreated(
-        _titleController.text,
-        _contentController.text,
-        kIsWeb ? _webImage : _selectedImage,
+      final post = Post(
+        id: widget.postToEdit?.id ?? 0,
+        title: _titleController.text,
+        content: _contentController.text,
+        imageUrl: _imageUrl,
+        username: 'Current User', // Replace with actual username
+        createdAt: DateTime.now(),
+        comments: widget.postToEdit?.comments ?? [],
+        user: widget.postToEdit?.user ?? 0,
+        interest: widget.postToEdit?.interest ?? 0,
+        updatedAt: DateTime.now(),
       );
-      if (mounted) {
-        Navigator.pop(context);
-      }
-    } catch (e) {
-      if (mounted) {
-        _showError(e.toString());
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
-    }
-  }
 
-  void _showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.red,
-      ),
-    );
+      widget.onPostCreated(post);
+      Navigator.pop(context);
+      _showSnackBar(
+        widget.postToEdit != null
+            ? context.read<Language>().get('post_updated')
+            : context.read<Language>().get('post_created'),
+      );
+    } catch (e) {
+      _showSnackBar(
+        context.read<Language>().get('failed_to_create_post') + e.toString(),
+        isError: true,
+      );
+    } finally {
+      setState(() => _isLoading = false);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final language = context.watch<Language>();
+    final isEditing = widget.postToEdit != null;
+
     return Dialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-      ),
-      elevation: 10,
-      backgroundColor: Colors.white,
-      child: Container(
-        padding: const EdgeInsets.fromLTRB(20, 24, 20, 16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildHeader(),
-            const Divider(height: 24),
-            _buildTitleField(),
-            const SizedBox(height: 16),
-            _buildContentField(),
-            const SizedBox(height: 16),
-            _buildImageSection(),
-            const SizedBox(height: 24),
-            _buildActionButtons(),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildHeader() {
-    return Row(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [Color(0xFF006C5F), Color(0xFF4CAF93)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child:
-              const Icon(Icons.create_rounded, color: Colors.white, size: 24),
-        ),
-        const SizedBox(width: 12),
-        const Text(
-          "Create Post",
-          style: TextStyle(
-            fontSize: 22,
-            fontWeight: FontWeight.bold,
-            color: Color(0xFF006C5F),
-          ),
-        ),
-        const Spacer(),
-        IconButton(
-          onPressed: () => Navigator.pop(context),
-          icon: const Icon(Icons.close, color: Colors.grey),
-          constraints: const BoxConstraints(),
-          padding: const EdgeInsets.all(8),
-          splashRadius: 20,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildTitleField() {
-    return TextField(
-      controller: _titleController,
-      decoration: InputDecoration(
-        labelText: 'Title',
-        labelStyle: const TextStyle(color: Color(0xFF006C5F)),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Colors.grey),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFF006C5F), width: 2),
-        ),
-        filled: true,
-        fillColor: Colors.grey[50],
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      ),
-    );
-  }
-
-  Widget _buildContentField() {
-    return TextField(
-      controller: _contentController,
-      maxLines: 5,
-      decoration: InputDecoration(
-        labelText: 'Content',
-        labelStyle: const TextStyle(color: Color(0xFF006C5F)),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Colors.grey),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFF006C5F), width: 2),
-        ),
-        filled: true,
-        fillColor: Colors.grey[50],
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      ),
-    );
-  }
-
-  Widget _buildImageSection() {
-    final hasImage = _selectedImage != null || _webImage != null;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        if (hasImage) ...[
-          Stack(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Container(
-                width: double.infinity,
-                height: 200,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.grey),
+              Text(
+                isEditing
+                    ? language.get('edit_post_title')
+                    : language.get('create_post_title'),
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
                 ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: kIsWeb
-                      ? Image.memory(_webImage!, fit: BoxFit.cover)
-                      : Image.file(_selectedImage!, fit: BoxFit.cover),
-                ),
+                textAlign: TextAlign.center,
               ),
-              Positioned(
-                top: 8,
-                right: 8,
-                child: IconButton(
-                  onPressed: _removeImage,
-                  icon: const Icon(Icons.close, color: Colors.white),
-                  style: IconButton.styleFrom(
-                    backgroundColor: Colors.black54,
-                    padding: const EdgeInsets.all(8),
+              const SizedBox(height: 20),
+              TextFormField(
+                controller: _titleController,
+                decoration: InputDecoration(
+                  labelText: language.get('post_title'),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
                   ),
                 ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter a title';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _contentController,
+                decoration: InputDecoration(
+                  labelText: language.get('post_content'),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                maxLines: 5,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter some content';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+              if (_imageUrl != null)
+                Stack(
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(10),
+                      child: Image.network(
+                        _imageUrl!,
+                        height: 200,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                    Positioned(
+                      top: 8,
+                      right: 8,
+                      child: IconButton(
+                        icon: const Icon(Icons.close, color: Colors.white),
+                        onPressed: () => setState(() => _imageUrl = null),
+                      ),
+                    ),
+                  ],
+                ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: _handleImageUpload,
+                      icon: const Icon(Icons.image_rounded),
+                      label: Text(language.get('add_image')),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: _isLoading ? null : _handleSubmit,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF006C5F),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      child: _isLoading
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor:
+                                    AlwaysStoppedAnimation<Color>(Colors.white),
+                              ),
+                            )
+                          : Text(
+                              isEditing
+                                  ? language.get('edit_post')
+                                  : language.get('post'),
+                            ),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
-        ] else ...[
-          OutlinedButton.icon(
-            onPressed: _pickImage,
-            icon: const Icon(Icons.image),
-            label: const Text('Add Image'),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: const Color(0xFF006C5F),
-              side: const BorderSide(color: Color(0xFF006C5F)),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-          ),
-        ],
-      ],
-    );
-  }
-
-  Widget _buildActionButtons() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.end,
-      children: [
-        TextButton(
-          onPressed: _isLoading ? null : () => Navigator.pop(context),
-          child: const Text(
-            'Cancel',
-            style: TextStyle(color: Colors.grey),
-          ),
         ),
-        const SizedBox(width: 8),
-        ElevatedButton(
-          onPressed: _isLoading ? null : _createPost,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF006C5F),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-          child: _isLoading
-              ? const SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(
-                    color: Colors.white,
-                    strokeWidth: 2,
-                  ),
-                )
-              : const Text('Create Post'),
-        ),
-      ],
+      ),
     );
   }
 }

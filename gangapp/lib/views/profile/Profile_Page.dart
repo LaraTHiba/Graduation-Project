@@ -12,6 +12,10 @@ import 'dart:typed_data';
 import 'package:transparent_image/transparent_image.dart';
 import '../widgets/profile_widgets.dart';
 import '../../utils/email_validator.dart';
+import '../widgets/profile_icon.dart';
+import 'dart:ui';
+import 'package:provider/provider.dart';
+import '../../languages/language.dart';
 
 class ProfilePage extends StatefulWidget {
   final String? username;
@@ -79,7 +83,7 @@ class _ProfilePageState extends State<ProfilePage> {
       _isCurrentUser =
           await _profileController.isCurrentUserProfile(widget.username!);
     }
-    _fetchUserProfile();
+    await _fetchUserProfile();
   }
 
   Future<void> _fetchUserProfile() async {
@@ -161,7 +165,7 @@ class _ProfilePageState extends State<ProfilePage> {
         _isSaving = false;
       });
 
-      _fetchUserProfile();
+      await _fetchUserProfile();
     } catch (e) {
       _showErrorDialog('Update Failed', 'Could not update profile: $e');
       setState(() => _isSaving = false);
@@ -313,185 +317,594 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Widget _buildSettingsPanel() {
+    final language = context.watch<Language>();
+    final isCompanyUser = _userType?.toLowerCase() == 'company';
+
     return AnimatedPositioned(
-      duration: Duration(milliseconds: 300),
+      duration: const Duration(milliseconds: 300),
       right: _isSettingsOpen ? 0 : -300,
       top: 0,
       bottom: 0,
       width: 300,
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 10,
-              offset: Offset(-2, 0),
-            ),
-          ],
-        ),
-        child: Column(
-          children: [
-            Container(
-              padding: EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: _primaryColor,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 5,
-                    offset: Offset(0, 2),
-                  ),
-                ],
+      child: Material(
+        elevation: 8,
+        borderRadius: BorderRadius.circular(24),
+        child: Container(
+          margin: const EdgeInsets.symmetric(vertical: 24, horizontal: 8),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.85),
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.12),
+                blurRadius: 24,
+                offset: const Offset(-8, 8),
               ),
-              child: Row(
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(24),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+              child: Column(
                 children: [
-                  IconButton(
-                    icon: Icon(Icons.arrow_back, color: Colors.white),
-                    onPressed: () => setState(() => _isSettingsOpen = false),
-                  ),
-                  SizedBox(width: 8),
-                  Text(
-                    'Settings',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: _primaryColor.withOpacity(0.95),
+                      borderRadius:
+                          const BorderRadius.vertical(top: Radius.circular(24)),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.08),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      children: [
+                        IconButton(
+                          icon:
+                              const Icon(Icons.arrow_back, color: Colors.white),
+                          onPressed: () =>
+                              setState(() => _isSettingsOpen = false),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          language.get('settings'),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  Spacer(),
-                  IconButton(
-                    icon: Icon(_isEditing ? Icons.check : Icons.edit,
-                        color: Colors.white),
-                    onPressed: () {
-                      if (_isEditing) _updateProfile();
-                      setState(() => _isEditing = !_isEditing);
-                    },
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (_isCurrentUser) ...[
+                            ListTile(
+                              leading: const Icon(Icons.language),
+                              title: Text(language.get('language')),
+                              subtitle: Text(
+                                  language.currentLanguageCode == 'ar'
+                                      ? 'العربية'
+                                      : 'English'),
+                              trailing: Switch(
+                                value: language.currentLanguageCode == 'ar',
+                                onChanged: (bool value) {
+                                  language.setLanguage(value ? 'ar' : 'en');
+                                },
+                              ),
+                            ),
+                            const Divider(),
+                            if (!isCompanyUser)
+                              ListTile(
+                                leading: const Icon(Icons.upload_file),
+                                title: const Text('Add CV'),
+                                onTap: () {
+                                  // TODO: Implement CV upload
+                                },
+                              ),
+                            const Divider(),
+                            ListTile(
+                              leading:
+                                  const Icon(Icons.logout, color: Colors.red),
+                              title: Text(
+                                language.get('logout'),
+                                style: const TextStyle(color: Colors.red),
+                              ),
+                              onTap: () async {
+                                try {
+                                  await _profileController.logout();
+                                  if (mounted) {
+                                    Navigator.of(context)
+                                        .pushNamedAndRemoveUntil(
+                                      '/login',
+                                      (Route<dynamic> route) => false,
+                                    );
+                                  }
+                                } catch (e) {
+                                  if (mounted) {
+                                    _showErrorDialog('Logout Failed',
+                                        'Could not log out: $e');
+                                  }
+                                }
+                              },
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
                   ),
                 ],
               ),
             ),
-            Expanded(
-              child: SingleChildScrollView(
-                padding: EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Profile Details',
-                      style: GoogleFonts.mukta(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: _primaryColor,
-                      ),
-                    ),
-                    SizedBox(height: 16),
-                    _buildEditableField(
-                      'Full Name',
-                      _fullNameController,
-                      Icons.person,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter your name';
-                        }
-                        return null;
-                      },
-                    ),
-                    SizedBox(height: 12),
-                    _buildEditableField(
-                      'Bio',
-                      _bioController,
-                      Icons.description,
-                      maxLines: 3,
-                    ),
-                    SizedBox(height: 12),
-                    _buildEditableField(
-                      'Location',
-                      _locationController,
-                      Icons.location_on,
-                    ),
-                    SizedBox(height: 12),
-                    _buildEditableField(
-                      'Date of Birth',
-                      _dobController,
-                      Icons.calendar_today,
-                      readOnly: true,
-                      onTap: _isEditing ? () => _selectDate(context) : null,
-                    ),
-                    SizedBox(height: 24),
-                    if (_isCurrentUser) ...[
-                      Text(
-                        'Account Information',
-                        style: GoogleFonts.mukta(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: _primaryColor,
-                        ),
-                      ),
-                      SizedBox(height: 16),
-                      _buildEditableField(
-                        'Phone Number',
-                        _phoneNumberController,
-                        Icons.phone,
-                        onChanged: (value) {
-                          setState(() {
-                            _userData['phone_number'] = value;
-                          });
-                        },
-                      ),
-                      SizedBox(height: 12),
-                      _buildEditableField(
-                        'User Type',
-                        TextEditingController(
-                            text: _userData['user_type'] ?? 'Standard'),
-                        Icons.person,
-                        readOnly: true,
-                      ),
-                      SizedBox(height: 24),
-                      Center(
-                        child: TextButton(
-                          onPressed: () async {
-                            try {
-                              await _profileController.logout();
-                              Navigator.of(context).pushNamedAndRemoveUntil(
-                                '/login',
-                                (Route<dynamic> route) => false,
-                              );
-                            } catch (e) {
-                              _showErrorDialog(
-                                  'Logout Failed', 'Could not log out: $e');
-                            }
-                          },
-                          style: TextButton.styleFrom(
-                            foregroundColor: Colors.red,
-                            padding: EdgeInsets.symmetric(
-                                horizontal: 20, vertical: 10),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(Icons.logout_rounded, size: 20),
-                              SizedBox(width: 8),
-                              Text(
-                                'Logout',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w500,
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final language = context.watch<Language>();
+    final isCompanyUser = _userType?.toLowerCase() == 'company';
+
+    return _isLoading
+        ? Scaffold(
+            backgroundColor: Colors.white,
+            body:
+                Center(child: CircularProgressIndicator(color: _primaryColor)))
+        : Stack(
+            children: [
+              GestureDetector(
+                onTap: () {
+                  if (_isSettingsOpen) {
+                    setState(() => _isSettingsOpen = false);
+                  }
+                  FocusScope.of(context).unfocus();
+                },
+                child: Scaffold(
+                  backgroundColor: Colors.grey[100],
+                  body: CustomScrollView(
+                    slivers: [
+                      SliverAppBar(
+                        expandedHeight: 200.0,
+                        floating: false,
+                        pinned: true,
+                        backgroundColor: _primaryColor,
+                        flexibleSpace: FlexibleSpaceBar(
+                          title: Text(
+                            _isCurrentUser
+                                ? ''
+                                : '${_userData['username']}\'s Profile',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              shadows: [
+                                Shadow(
+                                  blurRadius: 4.0,
+                                  color: Colors.black.withOpacity(0.5),
+                                  offset: Offset(0, 2),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
+                          ),
+                          background: _buildBackgroundImage(),
+                        ),
+                        actions: [
+                          if (_isCurrentUser)
+                            _isEditing
+                                ? Row(
+                                    children: [
+                                      if (_isSaving)
+                                        Container(
+                                          padding: EdgeInsets.all(8),
+                                          width: 40,
+                                          height: 40,
+                                          child: CircularProgressIndicator(
+                                            color: Colors.white,
+                                            strokeWidth: 2,
+                                          ),
+                                        )
+                                      else
+                                        IconButton(
+                                          icon: Icon(Icons.save),
+                                          tooltip: 'Save changes',
+                                          onPressed: _updateProfile,
+                                        ),
+                                      IconButton(
+                                        icon: Icon(Icons.cancel),
+                                        tooltip: 'Cancel editing',
+                                        onPressed: _isSaving
+                                            ? null
+                                            : () {
+                                                setState(() {
+                                                  _isEditing = false;
+                                                  _fullNameController.text =
+                                                      _userDetails[
+                                                              'full_name'] ??
+                                                          '';
+                                                  _bioController.text =
+                                                      _userDetails['bio'] ?? '';
+                                                  _locationController.text =
+                                                      _userDetails[
+                                                              'location'] ??
+                                                          '';
+                                                  _dobController
+                                                      .text = _userDetails[
+                                                          'date_of_birth'] ??
+                                                      '';
+                                                  _phoneNumberController.text =
+                                                      _userData[
+                                                              'phone_number'] ??
+                                                          '';
+                                                  _profileImageFile = null;
+                                                  _backgroundImageFile = null;
+                                                  _profileImageWeb = null;
+                                                  _backgroundImageWeb = null;
+                                                });
+                                              },
+                                      ),
+                                    ],
+                                  )
+                                : Row(
+                                    children: [
+                                      IconButton(
+                                        icon: Icon(Icons.settings),
+                                        tooltip: 'Settings',
+                                        onPressed: () => setState(
+                                            () => _isSettingsOpen = true),
+                                      ),
+                                      IconButton(
+                                        icon: Icon(Icons.edit),
+                                        tooltip: 'Edit profile',
+                                        onPressed: () =>
+                                            setState(() => _isEditing = true),
+                                      ),
+                                    ],
+                                  ),
+                        ],
+                      ),
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Form(
+                            key: _formKey,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Center(
+                                  child: Stack(
+                                    children: [
+                                      Material(
+                                        elevation: 4,
+                                        shape: CircleBorder(),
+                                        child: GestureDetector(
+                                          onTap: _isEditing
+                                              ? () =>
+                                                  _showImagePickerOptions(true)
+                                              : null,
+                                          child: Container(
+                                            width: 124,
+                                            height: 124,
+                                            decoration: BoxDecoration(
+                                              shape: BoxShape.circle,
+                                              color: Colors.grey.shade200,
+                                            ),
+                                            child: ClipOval(
+                                              child: _userDetails[
+                                                              'profile_picture_url'] !=
+                                                          null &&
+                                                      _userDetails[
+                                                              'profile_picture_url']
+                                                          .toString()
+                                                          .isNotEmpty
+                                                  ? Image.network(
+                                                      _userDetails[
+                                                          'profile_picture_url'],
+                                                      fit: BoxFit.contain,
+                                                      errorBuilder: (context,
+                                                          error, stackTrace) {
+                                                        return Container(
+                                                          color: Colors
+                                                              .grey.shade300,
+                                                          child: Icon(
+                                                            Icons.person,
+                                                            size: 80,
+                                                            color: Colors
+                                                                .grey.shade400,
+                                                          ),
+                                                        );
+                                                      },
+                                                    )
+                                                  : Icon(Icons.person,
+                                                      size: 80,
+                                                      color:
+                                                          Colors.grey.shade400),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      if (_isEditing)
+                                        Positioned(
+                                          right: 0,
+                                          bottom: 0,
+                                          child: Container(
+                                            padding: EdgeInsets.all(8),
+                                            decoration: BoxDecoration(
+                                              color: _primaryColor,
+                                              shape: BoxShape.circle,
+                                              boxShadow: [
+                                                BoxShadow(
+                                                  color: Colors.black
+                                                      .withOpacity(0.2),
+                                                  blurRadius: 5,
+                                                  offset: Offset(0, 2),
+                                                ),
+                                              ],
+                                            ),
+                                            child: Icon(
+                                              Icons.camera_alt,
+                                              color: Colors.white,
+                                              size: 20,
+                                            ),
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                                SizedBox(height: 16),
+                                Center(
+                                  child: Column(
+                                    children: [
+                                      Text(
+                                        _userData['username'] ?? '',
+                                        style: GoogleFonts.mukta(
+                                          fontSize: 24,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.grey[800],
+                                        ),
+                                      ),
+                                      SizedBox(height: 8),
+                                      if (_userDetails['bio']?.isNotEmpty ??
+                                          false)
+                                        Container(
+                                          padding: EdgeInsets.symmetric(
+                                              horizontal: 24, vertical: 12),
+                                          child: Text(
+                                            _userDetails['bio'] ?? '',
+                                            textAlign: TextAlign.center,
+                                            style: GoogleFonts.mukta(
+                                              fontSize: 16,
+                                              color: Colors.grey[600],
+                                              height: 1.5,
+                                            ),
+                                          ),
+                                        ),
+                                      SizedBox(height: 8),
+                                      Text(
+                                        _userData['email'] ?? '',
+                                        style: TextStyle(
+                                          color: Colors.grey[600],
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                if (_isEditing) ...[
+                                  SizedBox(height: 24),
+                                  Text(
+                                    'Profile Details',
+                                    style: GoogleFonts.mukta(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: _primaryColor,
+                                    ),
+                                  ),
+                                  SizedBox(height: 16),
+                                  _buildEditableField(
+                                    'Full Name',
+                                    _fullNameController,
+                                    Icons.person,
+                                    validator: (value) {
+                                      if (value == null || value.isEmpty) {
+                                        return 'Please enter your name';
+                                      }
+                                      return null;
+                                    },
+                                  ),
+                                  SizedBox(height: 12),
+                                  _buildEditableField(
+                                    'Bio',
+                                    _bioController,
+                                    Icons.description,
+                                    maxLines: 3,
+                                  ),
+                                  SizedBox(height: 12),
+                                  _buildEditableField(
+                                    'Location',
+                                    _locationController,
+                                    Icons.location_on,
+                                  ),
+                                  SizedBox(height: 12),
+                                  _buildEditableField(
+                                    'Date of Birth',
+                                    _dobController,
+                                    Icons.calendar_today,
+                                    readOnly: true,
+                                    onTap: _isEditing
+                                        ? () => _selectDate(context)
+                                        : null,
+                                  ),
+                                  SizedBox(height: 24),
+                                  Text(
+                                    'Account Information',
+                                    style: GoogleFonts.mukta(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: _primaryColor,
+                                    ),
+                                  ),
+                                  SizedBox(height: 16),
+                                  _buildEditableField(
+                                    'Phone Number',
+                                    _phoneNumberController,
+                                    Icons.phone,
+                                    onChanged: (value) {
+                                      setState(() {
+                                        _userData['phone_number'] = value;
+                                      });
+                                    },
+                                  ),
+                                  SizedBox(height: 12),
+                                  _buildEditableField(
+                                    'User Type',
+                                    TextEditingController(
+                                        text: _userData['user_type'] ??
+                                            'Standard'),
+                                    Icons.person,
+                                    readOnly: true,
+                                  ),
+                                ],
+                                SizedBox(height: 24),
+                                Text(
+                                  language.get('posts'),
+                                  style: GoogleFonts.mukta(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                    color: _primaryColor,
+                                  ),
+                                ),
+                                SizedBox(height: 16),
+                                _buildPostsGrid(),
+                              ],
+                            ),
                           ),
                         ),
                       ),
                     ],
-                  ],
+                  ),
+                  bottomNavigationBar: ClipRRect(
+                    borderRadius:
+                        const BorderRadius.vertical(top: Radius.circular(20)),
+                    child: Container(
+                      color: const Color(0xFF006C5F),
+                      height: 60,
+                      child: BottomNavigationBar(
+                        currentIndex: isCompanyUser ? 2 : 3,
+                        onTap: (index) {
+                          if (isCompanyUser) {
+                            // Company: Home (0), Explore (1), Profile (2)
+                            switch (index) {
+                              case 0:
+                                Navigator.pushReplacementNamed(
+                                    context, '/home');
+                                break;
+                              case 1:
+                                Navigator.pushReplacementNamed(
+                                    context, '/explore');
+                                break;
+                              case 2:
+                                // Already on profile
+                                break;
+                            }
+                          } else {
+                            // User: Home (0), Groups (1), Explore (2), Profile (3)
+                            switch (index) {
+                              case 0:
+                                Navigator.pushReplacementNamed(
+                                    context, '/home');
+                                break;
+                              case 1:
+                                // TODO: Implement groups navigation
+                                break;
+                              case 2:
+                                Navigator.pushReplacementNamed(
+                                    context, '/explore');
+                                break;
+                              case 3:
+                                // Already on profile
+                                break;
+                            }
+                          }
+                        },
+                        type: BottomNavigationBarType.fixed,
+                        backgroundColor: const Color(0xFF006C5F),
+                        elevation: 8,
+                        selectedItemColor: Colors.white,
+                        unselectedItemColor: Colors.white70,
+                        selectedLabelStyle: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                          letterSpacing: 0.5,
+                        ),
+                        unselectedLabelStyle: const TextStyle(
+                          fontWeight: FontWeight.normal,
+                          fontSize: 12,
+                          letterSpacing: 0.5,
+                        ),
+                        items: isCompanyUser
+                            ? [
+                                BottomNavigationBarItem(
+                                  icon: const Icon(Icons.home_rounded),
+                                  label: language.get('home'),
+                                ),
+                                BottomNavigationBarItem(
+                                  icon: const Icon(Icons.explore_rounded),
+                                  label: language.get('explore'),
+                                ),
+                                BottomNavigationBarItem(
+                                  icon: ProfileIcon(
+                                    imageUrl:
+                                        _userDetails['profile_picture_url'],
+                                    isLoading: _isLoading,
+                                    size: 26,
+                                    iconColor: Colors.white,
+                                  ),
+                                  label: language.get('profile'),
+                                ),
+                              ]
+                            : [
+                                BottomNavigationBarItem(
+                                  icon: const Icon(Icons.home_rounded),
+                                  label: language.get('home'),
+                                ),
+                                BottomNavigationBarItem(
+                                  icon: const Icon(Icons.group_rounded),
+                                  label: language.get('groups'),
+                                ),
+                                BottomNavigationBarItem(
+                                  icon: const Icon(Icons.explore_rounded),
+                                  label: language.get('explore'),
+                                ),
+                                BottomNavigationBarItem(
+                                  icon: ProfileIcon(
+                                    imageUrl:
+                                        _userDetails['profile_picture_url'],
+                                    isLoading: _isLoading,
+                                    size: 26,
+                                    iconColor: Colors.white,
+                                  ),
+                                  label: language.get('profile'),
+                                ),
+                              ],
+                      ),
+                    ),
+                  ),
                 ),
               ),
-            ),
-          ],
-        ),
-      ),
-    );
+              _buildSettingsPanel(),
+            ],
+          );
   }
 
   Widget _buildPostsGrid() {
@@ -673,383 +1086,6 @@ class _ProfilePageState extends State<ProfilePage> {
         },
       ),
     );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final isCompanyUser = _userType?.toLowerCase() == 'company';
-
-    print(
-        'userType: $_userType, userEmail: $_userEmail, isCompanyUser: $isCompanyUser');
-
-    return _isLoading
-        ? Scaffold(
-            backgroundColor: Colors.white,
-            body:
-                Center(child: CircularProgressIndicator(color: _primaryColor)))
-        : Stack(
-            children: [
-              GestureDetector(
-                onTap: () {
-                  if (_isSettingsOpen) {
-                    setState(() => _isSettingsOpen = false);
-                  }
-                  FocusScope.of(context).unfocus();
-                },
-                child: Scaffold(
-                  backgroundColor: Colors.grey[100],
-                  body: CustomScrollView(
-                    slivers: [
-                      SliverAppBar(
-                        expandedHeight: 200.0,
-                        floating: false,
-                        pinned: true,
-                        backgroundColor: _primaryColor,
-                        flexibleSpace: FlexibleSpaceBar(
-                          title: Text(
-                            _isCurrentUser
-                                ? ''
-                                : '${_userData['username']}\'s Profile',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              shadows: [
-                                Shadow(
-                                  blurRadius: 4.0,
-                                  color: Colors.black.withOpacity(0.5),
-                                  offset: Offset(0, 2),
-                                ),
-                              ],
-                            ),
-                          ),
-                          background: _buildBackgroundImage(),
-                        ),
-                        actions: [
-                          if (_isCurrentUser)
-                            _isEditing
-                                ? Row(
-                                    children: [
-                                      if (_isSaving)
-                                        Container(
-                                          padding: EdgeInsets.all(8),
-                                          width: 40,
-                                          height: 40,
-                                          child: CircularProgressIndicator(
-                                            color: Colors.white,
-                                            strokeWidth: 2,
-                                          ),
-                                        )
-                                      else
-                                        IconButton(
-                                          icon: Icon(Icons.save),
-                                          tooltip: 'Save changes',
-                                          onPressed: _updateProfile,
-                                        ),
-                                      IconButton(
-                                        icon: Icon(Icons.cancel),
-                                        tooltip: 'Cancel editing',
-                                        onPressed: _isSaving
-                                            ? null
-                                            : () {
-                                                setState(() {
-                                                  _isEditing = false;
-                                                  _fullNameController.text =
-                                                      _userDetails[
-                                                              'full_name'] ??
-                                                          '';
-                                                  _bioController.text =
-                                                      _userDetails['bio'] ?? '';
-                                                  _locationController.text =
-                                                      _userDetails[
-                                                              'location'] ??
-                                                          '';
-                                                  _dobController
-                                                      .text = _userDetails[
-                                                          'date_of_birth'] ??
-                                                      '';
-                                                  _profileImageFile = null;
-                                                  _backgroundImageFile = null;
-                                                  _profileImageWeb = null;
-                                                  _backgroundImageWeb = null;
-                                                });
-                                              },
-                                      ),
-                                    ],
-                                  )
-                                : Row(
-                                    children: [
-                                      IconButton(
-                                        icon: Icon(Icons.settings),
-                                        tooltip: 'Settings',
-                                        onPressed: () => setState(
-                                            () => _isSettingsOpen = true),
-                                      ),
-                                      IconButton(
-                                        icon: Icon(Icons.edit),
-                                        tooltip: 'Edit profile',
-                                        onPressed: () =>
-                                            setState(() => _isEditing = true),
-                                      ),
-                                    ],
-                                  ),
-                        ],
-                      ),
-                      SliverToBoxAdapter(
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Form(
-                            key: _formKey,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Center(
-                                  child: Stack(
-                                    children: [
-                                      Material(
-                                        elevation: 4,
-                                        shape: CircleBorder(),
-                                        child: GestureDetector(
-                                          onTap: _isEditing
-                                              ? () =>
-                                                  _showImagePickerOptions(true)
-                                              : null,
-                                          child: Container(
-                                            width: 124,
-                                            height: 124,
-                                            decoration: BoxDecoration(
-                                              shape: BoxShape.circle,
-                                              color: Colors.grey.shade200,
-                                            ),
-                                            child: ClipOval(
-                                              child: _userDetails[
-                                                              'profile_picture_url'] !=
-                                                          null &&
-                                                      _userDetails[
-                                                              'profile_picture_url']
-                                                          .toString()
-                                                          .isNotEmpty
-                                                  ? Image.network(
-                                                      _userDetails[
-                                                          'profile_picture_url'],
-                                                      fit: BoxFit.contain,
-                                                      errorBuilder: (context,
-                                                          error, stackTrace) {
-                                                        return Container(
-                                                          color: Colors
-                                                              .grey.shade300,
-                                                          child: Icon(
-                                                            Icons.person,
-                                                            size: 80,
-                                                            color: Colors
-                                                                .grey.shade400,
-                                                          ),
-                                                        );
-                                                      },
-                                                    )
-                                                  : Icon(Icons.person,
-                                                      size: 80,
-                                                      color:
-                                                          Colors.grey.shade400),
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                      if (_isEditing)
-                                        Positioned(
-                                          right: 0,
-                                          bottom: 0,
-                                          child: Container(
-                                            padding: EdgeInsets.all(8),
-                                            decoration: BoxDecoration(
-                                              color: _primaryColor,
-                                              shape: BoxShape.circle,
-                                              boxShadow: [
-                                                BoxShadow(
-                                                  color: Colors.black
-                                                      .withOpacity(0.2),
-                                                  blurRadius: 5,
-                                                  offset: Offset(0, 2),
-                                                ),
-                                              ],
-                                            ),
-                                            child: Icon(
-                                              Icons.camera_alt,
-                                              color: Colors.white,
-                                              size: 20,
-                                            ),
-                                          ),
-                                        ),
-                                    ],
-                                  ),
-                                ),
-                                SizedBox(height: 16),
-                                Center(
-                                  child: Column(
-                                    children: [
-                                      Text(
-                                        _userData['username'] ?? '',
-                                        style: GoogleFonts.mukta(
-                                          fontSize: 24,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.grey[800],
-                                        ),
-                                      ),
-                                      SizedBox(height: 8),
-                                      if (_userDetails['bio']?.isNotEmpty ??
-                                          false)
-                                        Container(
-                                          padding: EdgeInsets.symmetric(
-                                              horizontal: 24, vertical: 12),
-                                          child: Text(
-                                            _userDetails['bio'] ?? '',
-                                            textAlign: TextAlign.center,
-                                            style: GoogleFonts.mukta(
-                                              fontSize: 16,
-                                              color: Colors.grey[600],
-                                              height: 1.5,
-                                            ),
-                                          ),
-                                        ),
-                                      SizedBox(height: 8),
-                                      Text(
-                                        _userData['email'] ?? '',
-                                        style: TextStyle(
-                                          color: Colors.grey[600],
-                                          fontSize: 14,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                SizedBox(height: 24),
-                                Text(
-                                  'Posts',
-                                  style: GoogleFonts.mukta(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold,
-                                    color: _primaryColor,
-                                  ),
-                                ),
-                                SizedBox(height: 16),
-                                _buildPostsGrid(),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  bottomNavigationBar: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
-                          blurRadius: 20,
-                          offset: Offset(0, -5),
-                        ),
-                      ],
-                    ),
-                    child: ClipRRect(
-                      borderRadius:
-                          BorderRadius.vertical(top: Radius.circular(20)),
-                      child: Container(
-                        height: 70,
-                        color: _primaryColor,
-                        child: BottomNavigationBar(
-                          currentIndex: isCompanyUser ? 2 : 3,
-                          onTap: (index) {
-                            if (isCompanyUser) {
-                              // Company: Home (0), Explore (1), Profile (2)
-                              switch (index) {
-                                case 0:
-                                  Navigator.pushReplacementNamed(
-                                      context, '/home');
-                                  break;
-                                case 1:
-                                  Navigator.pushReplacementNamed(
-                                      context, '/explore');
-                                  break;
-                                case 2:
-                                  // Already on profile
-                                  break;
-                              }
-                            } else {
-                              // User: Home (0), Groups (1), Explore (2), Profile (3)
-                              switch (index) {
-                                case 0:
-                                  Navigator.pushReplacementNamed(
-                                      context, '/home');
-                                  break;
-                                case 1:
-                                  // Groups: do nothing or implement navigation
-                                  break;
-                                case 2:
-                                  Navigator.pushReplacementNamed(
-                                      context, '/explore');
-                                  break;
-                                case 3:
-                                  // Already on profile
-                                  break;
-                              }
-                            }
-                          },
-                          type: BottomNavigationBarType.fixed,
-                          backgroundColor: Colors.transparent,
-                          elevation: 0,
-                          selectedItemColor: Colors.white,
-                          unselectedItemColor: Colors.white.withOpacity(0.6),
-                          selectedLabelStyle: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12,
-                            letterSpacing: 0.5,
-                          ),
-                          unselectedLabelStyle: TextStyle(
-                            fontWeight: FontWeight.normal,
-                            fontSize: 12,
-                            letterSpacing: 0.5,
-                          ),
-                          items: isCompanyUser
-                              ? [
-                                  BottomNavigationBarItem(
-                                    icon: Icon(Icons.home_rounded),
-                                    label: 'Home',
-                                  ),
-                                  BottomNavigationBarItem(
-                                    icon: Icon(Icons.explore_rounded),
-                                    label: 'Explore',
-                                  ),
-                                  BottomNavigationBarItem(
-                                    icon: Icon(Icons.person_rounded),
-                                    label: 'Profile',
-                                  ),
-                                ]
-                              : [
-                                  BottomNavigationBarItem(
-                                    icon: Icon(Icons.home_rounded),
-                                    label: 'Home',
-                                  ),
-                                  BottomNavigationBarItem(
-                                    icon: Icon(Icons.group_rounded),
-                                    label: 'Groups',
-                                  ),
-                                  BottomNavigationBarItem(
-                                    icon: Icon(Icons.explore_rounded),
-                                    label: 'Explore',
-                                  ),
-                                  BottomNavigationBarItem(
-                                    icon: Icon(Icons.person_rounded),
-                                    label: 'Profile',
-                                  ),
-                                ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              _buildSettingsPanel(),
-            ],
-          );
   }
 
   @override

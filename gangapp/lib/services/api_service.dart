@@ -1511,7 +1511,7 @@ class ApiService {
     final token = await getAuthToken();
 
     final response = await http.delete(
-      Uri.parse('$baseUrl/comments/posts/$commentId/hard-delete/'),
+      Uri.parse('$baseUrl/comments/$commentId/hard-delete/'),
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token',

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../languages/language.dart';
 import '../profile/Profile_Page.dart';
 import '../widgets/create_post_dialog.dart';
 import '../widgets/home_bottom_nav.dart';
@@ -18,13 +20,15 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  final _homeController = HomeController();
+  final HomeController _homeController = HomeController();
   late Future<List<Post>> _postsFuture;
   String? _profileImageUrl;
   bool _isLoadingProfile = true;
   int _currentIndex = 0;
   String _userType = 'User';
   String? _userEmail;
+  List<Post> _posts = [];
+  bool _isLoading = true;
 
   @override
   void initState() {
@@ -36,6 +40,7 @@ class _HomePageState extends State<HomePage> {
     _postsFuture = _homeController.fetchPosts();
     await _fetchUserProfile();
     await _loadUserTypeAndEmail();
+    await _refreshPosts();
   }
 
   Future<void> _loadUserTypeAndEmail() async {
@@ -57,30 +62,54 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _refreshPosts() async {
-    setState(() => _postsFuture = _homeController.fetchPosts());
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final posts = await _homeController.fetchPosts();
+      setState(() {
+        _posts = posts;
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+                "${context.read<Language>().get('error_loading_posts')} $e"),
+            duration: const Duration(seconds: 5),
+            action: SnackBarAction(
+              label: context.read<Language>().get('dismiss'),
+              onPressed: () =>
+                  ScaffoldMessenger.of(context).hideCurrentSnackBar(),
+            ),
+          ),
+        );
+      }
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
-  Future<void> _createPost(String title, String content, dynamic image) async {
+  Future<void> _createPost(Post post) async {
     try {
-      String filename = image.path.split('/').last;
-      if (filename.isEmpty || filename == 'null' || filename == 'None') {
-        final timestamp = DateTime.now().millisecondsSinceEpoch;
-        filename = 'post_image_$timestamp.jpg';
-      }
       await _homeController.createPost(
-        title: title,
-        content: content,
-        image: image,
+        title: post.title,
+        content: post.content,
+        image: post.imageUrl,
       );
       await _refreshPosts();
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text("Failed to create post: $e"),
+            content: Text(
+                "${context.read<Language>().get('failed_to_create_post')} $e"),
             duration: const Duration(seconds: 5),
             action: SnackBarAction(
-              label: 'DISMISS',
+              label: context.read<Language>().get('dismiss'),
               onPressed: () =>
                   ScaffoldMessenger.of(context).hideCurrentSnackBar(),
             ),
@@ -146,10 +175,9 @@ class _HomePageState extends State<HomePage> {
   Widget _buildPostCard(Post post) {
     return HomeWidget.buildPostCard(
       post,
-      (postId) => Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => CommentScreen(postId: postId)),
-      ),
+      (postId) {
+        // No longer navigate to comment screen
+      },
       onPostArchived: _refreshPosts,
     );
   }
@@ -172,7 +200,7 @@ class _HomePageState extends State<HomePage> {
         Container(
           margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
           decoration: BoxDecoration(
-            color: const Color(0xFF006C5F), // App primary color
+            color: const Color(0xFF006C5F),
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
@@ -183,20 +211,21 @@ class _HomePageState extends State<HomePage> {
             ],
           ),
           child: TextButton.icon(
-            icon: const Icon(Icons.business_rounded, color: Colors.white),
+            icon: const Icon(Icons.business_rounded,
+                color: Colors.white, size: 20),
             label: const Text(
-              'Pro-Company',
+              'Pro',
               style:
                   TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
             ),
             onPressed: _showProCompanyRequestDialog,
             style: TextButton.styleFrom(
-              backgroundColor: Colors.transparent, // Use container color
+              backgroundColor: Colors.transparent,
               shadowColor: Colors.transparent,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
-                side: BorderSide.none, // No border
+                side: BorderSide.none,
               ),
             ),
           ),
@@ -209,71 +238,48 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final language = context.watch<Language>();
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Home'),
+        title: Text(language.get('home')),
         backgroundColor: const Color(0xFF006C5F),
         foregroundColor: Colors.white,
         actions: _buildAppBarActions(),
         toolbarHeight: 70,
       ),
-      body: RefreshIndicator(
-        onRefresh: _refreshPosts,
-        child: FutureBuilder<List<Post>>(
-          future: _postsFuture,
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
-            }
-
-            if (snapshot.hasError) {
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.error_outline,
-                        size: 48, color: Colors.red),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Error loading posts: ${snapshot.error}',
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed: _refreshPosts,
-                      child: const Text('Retry'),
-                    ),
-                  ],
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : _posts.isEmpty
+              ? Center(
+                  child: Text(
+                    language.get('no_posts'),
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                )
+              : RefreshIndicator(
+                  onRefresh: _refreshPosts,
+                  child: ListView.builder(
+                    padding: const EdgeInsets.all(8),
+                    itemCount: _posts.length,
+                    itemBuilder: (context, index) =>
+                        _buildPostCard(_posts[index]),
+                  ),
                 ),
-              );
-            }
-
-            final posts = snapshot.data!;
-            if (posts.isEmpty) {
-              return const Center(
-                child: Text('No posts yet. Be the first to post!'),
-              );
-            }
-
-            return ListView.builder(
-              padding: const EdgeInsets.all(8),
-              itemCount: posts.length,
-              itemBuilder: (context, index) => _buildPostCard(posts[index]),
-            );
-          },
-        ),
-      ),
       floatingActionButton: FloatingActionButton(
         onPressed: _showCreatePostDialog,
         backgroundColor: const Color(0xFF006C5F),
         child: const Icon(Icons.add, color: Colors.white),
       ),
-      bottomNavigationBar: HomeBottomNav(
-        currentIndex: _userType == 'Company' ? 2 : 3,
-        profileImageUrl: _profileImageUrl,
-        isLoadingProfile: _isLoadingProfile,
-        userType: _userType,
-        onTabSelected: _onTabSelected,
+      bottomNavigationBar: ClipRRect(
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        child: HomeBottomNav(
+          currentIndex: _userType == 'Company' ? 2 : 3,
+          profileImageUrl: _profileImageUrl,
+          isLoadingProfile: _isLoadingProfile,
+          userType: _userType,
+          onTabSelected: _onTabSelected,
+        ),
       ),
     );
   }

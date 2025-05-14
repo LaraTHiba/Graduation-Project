@@ -10,6 +10,8 @@ import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import '../../controllers/profile_controller.dart';
+import 'package:provider/provider.dart';
+import '../../languages/language.dart';
 
 class PostCard extends StatefulWidget {
   final Post post;
@@ -42,13 +44,13 @@ class _PostCardState extends State<PostCard>
   late Animation<double> _animation;
 
   // Constants for styling
-  static const _primaryColor = Color(0xFF006C5F);
-  static const _secondaryColor = Color(0xFF4CAF93);
-  static final _borderRadius = BorderRadius.circular(20);
-  static final _boxShadow = BoxShadow(
-    color: Colors.black26,
+  final Color _primaryColor = const Color(0xFF006C5F);
+  final Color _secondaryColor = const Color(0xFF4CAF93);
+  final BorderRadius _borderRadius = BorderRadius.circular(20);
+  final BoxShadow _boxShadow = BoxShadow(
+    color: Colors.black.withOpacity(0.1),
     blurRadius: 10,
-    offset: Offset(0, 4),
+    offset: const Offset(0, 4),
   );
 
   @override
@@ -128,6 +130,7 @@ class _PostCardState extends State<PostCard>
   }
 
   void _showSnackBar(String message, {bool isError = false}) {
+    final language = Provider.of<Language>(context, listen: false);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
@@ -139,7 +142,7 @@ class _PostCardState extends State<PostCard>
                   : Icons.check_circle_rounded,
               color: Colors.white,
             ),
-            SizedBox(width: 8),
+            const SizedBox(width: 8),
             Flexible(
               child: Text(
                 message,
@@ -150,7 +153,7 @@ class _PostCardState extends State<PostCard>
         ),
         backgroundColor: isError ? Colors.red[400] : _primaryColor,
         behavior: SnackBarBehavior.floating,
-        margin: EdgeInsets.all(16),
+        margin: const EdgeInsets.all(16),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
     );
@@ -215,142 +218,6 @@ class _PostCardState extends State<PostCard>
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildCommentInput() {
-    return Container(
-      padding: EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(20),
-          bottomRight: Radius.circular(20),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: Offset(0, -4),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          if (_selectedImage != null || _webImage != null) ...[
-            _buildImagePreview(),
-            SizedBox(height: 16),
-          ],
-          Row(
-            children: [
-              Expanded(
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.grey[100],
-                    borderRadius: BorderRadius.circular(24),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
-                        blurRadius: 8,
-                        offset: Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          controller: _commentController,
-                          decoration: InputDecoration(
-                            hintText: 'Write a comment...',
-                            hintStyle: TextStyle(
-                              color: Colors.grey[500],
-                              fontSize: 14,
-                            ),
-                            border: InputBorder.none,
-                            contentPadding: EdgeInsets.symmetric(
-                              horizontal: 20,
-                              vertical: 14,
-                            ),
-                          ),
-                          maxLines: 1,
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.black87,
-                          ),
-                        ),
-                      ),
-                      Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(20),
-                          onTap: () async {
-                            final picked = await ImagePicker()
-                                .pickImage(source: ImageSource.gallery);
-                            if (picked != null) {
-                              if (kIsWeb) {
-                                final bytes = await picked.readAsBytes();
-                                setState(() => _webImage = bytes);
-                              } else {
-                                setState(
-                                    () => _selectedImage = File(picked.path));
-                              }
-                            }
-                          },
-                          child: Container(
-                            padding: EdgeInsets.all(10),
-                            child: Icon(
-                              Icons.photo_library_rounded,
-                              color: Colors.grey[700],
-                              size: 22,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              SizedBox(width: 12),
-              Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(20),
-                  onTap: _isSubmitting ? null : _submitComment,
-                  child: Container(
-                    padding: EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: _isSubmitting ? Colors.grey[300] : _primaryColor,
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: [
-                        BoxShadow(
-                          color: _primaryColor.withOpacity(0.3),
-                          blurRadius: 8,
-                          offset: Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: _isSubmitting
-                        ? SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              color: Colors.white,
-                              strokeWidth: 2,
-                            ),
-                          )
-                        : Icon(
-                            Icons.send_rounded,
-                            color: Colors.white,
-                            size: 20,
-                          ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
     );
   }
 
@@ -502,7 +369,7 @@ class _PostCardState extends State<PostCard>
                             icon: Icon(Icons.reply_rounded,
                                 size: 16, color: Colors.grey[600]),
                             label: Text(
-                              'Reply',
+                              context.read<Language>().get('reply'),
                               style: TextStyle(
                                 color: Colors.grey[600],
                                 fontSize: 12,
@@ -531,17 +398,19 @@ class _PostCardState extends State<PostCard>
     File? selectedImage;
     Uint8List? webImage;
 
+    final language = Provider.of<Language>(context, listen: false);
+
     return showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Reply to ${parentComment.username}'),
+        title: Text('${language.get('Reply to')} ${parentComment.username}'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
               controller: replyController,
               decoration: InputDecoration(
-                hintText: 'Write your reply...',
+                hintText: language.get('Write your reply...'),
                 border: OutlineInputBorder(),
               ),
               maxLines: 3,
@@ -561,19 +430,20 @@ class _PostCardState extends State<PostCard>
                 }
               },
               icon: Icon(Icons.image),
-              label: Text('Add Image'),
+              label: Text(language.get('Add Image')),
             ),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Cancel'),
+            child: Text(language.get('Cancel')),
           ),
           ElevatedButton(
             onPressed: () async {
               if (replyController.text.trim().isEmpty) {
-                _showSnackBar("Please write a reply", isError: true);
+                _showSnackBar(language.get('Please write a reply'),
+                    isError: true);
                 return;
               }
 
@@ -622,7 +492,7 @@ class _PostCardState extends State<PostCard>
                 _showSnackBar("Error: $e", isError: true);
               }
             },
-            child: Text('Post Reply'),
+            child: Text(language.get('Post Reply')),
           ),
         ],
       ),
@@ -704,7 +574,9 @@ class _PostCardState extends State<PostCard>
                                           Icon(Icons.edit_rounded,
                                               color: Colors.grey[700]),
                                           SizedBox(width: 8),
-                                          Text('Edit Reply'),
+                                          Text(context
+                                              .read<Language>()
+                                              .get('Edit Reply')),
                                         ],
                                       ),
                                     ),
@@ -715,9 +587,13 @@ class _PostCardState extends State<PostCard>
                                           Icon(Icons.delete_rounded,
                                               color: Colors.red[400]),
                                           SizedBox(width: 8),
-                                          Text('Delete Reply',
-                                              style: TextStyle(
-                                                  color: Colors.red[400])),
+                                          Text(
+                                            context
+                                                .read<Language>()
+                                                .get('Delete Reply'),
+                                            style: TextStyle(
+                                                color: Colors.red[400]),
+                                          ),
                                         ],
                                       ),
                                     ),
@@ -853,39 +729,34 @@ class _PostCardState extends State<PostCard>
   }
 
   Widget _buildPostHeader() {
-    return Padding(
-      padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
+    final language = Provider.of<Language>(context, listen: false);
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: _borderRadius.topLeft),
+      ),
       child: Row(
         children: [
           _buildAvatar(widget.post.username, isReply: false),
-          SizedBox(width: 12),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   widget.post.username,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
                   ),
                 ),
-                Row(
-                  children: [
-                    Icon(
-                      Icons.access_time_rounded,
-                      size: 14,
-                      color: Colors.grey[500],
-                    ),
-                    SizedBox(width: 4),
-                    Text(
-                      _formatDate(widget.post.createdAt),
-                      style: TextStyle(
-                        color: Colors.grey[600],
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
+                Text(
+                  _formatDate(widget.post.createdAt),
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 12,
+                  ),
                 ),
               ],
             ),
@@ -1073,18 +944,19 @@ class _PostCardState extends State<PostCard>
   }
 
   Widget _buildCommentsSection() {
+    final language = Provider.of<Language>(context, listen: false);
     return Container(
       decoration: BoxDecoration(
         color: Colors.grey[50],
         borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(20),
-          bottomRight: Radius.circular(20),
+          bottomLeft: _borderRadius.bottomLeft,
+          bottomRight: _borderRadius.bottomRight,
         ),
       ),
       child: Column(
         children: [
           Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -1095,18 +967,19 @@ class _PostCardState extends State<PostCard>
                       size: 20,
                       color: _primaryColor,
                     ),
-                    SizedBox(width: 8),
+                    const SizedBox(width: 8),
                     Text(
-                      'Comments',
-                      style: TextStyle(
+                      language.get('comments'),
+                      style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
                         color: Colors.black87,
                       ),
                     ),
-                    SizedBox(width: 8),
+                    const SizedBox(width: 8),
                     Container(
-                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         color: _primaryColor.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(12),
@@ -1128,22 +1001,21 @@ class _PostCardState extends State<PostCard>
                     borderRadius: BorderRadius.circular(20),
                     onTap: () {
                       setState(() {
-                        _isCommentsVisible = !_isCommentsVisible;
                         if (_isCommentsVisible) {
-                          _animationController.forward();
-                        } else {
                           _animationController.reverse();
+                        } else {
+                          _animationController.forward();
                         }
+                        _isCommentsVisible = !_isCommentsVisible;
                       });
                     },
                     child: Padding(
-                      padding: EdgeInsets.all(8),
-                      child: RotationTransition(
-                        turns: Tween(begin: 0.0, end: 0.5).animate(_animation),
-                        child: Icon(
-                          Icons.keyboard_arrow_down_rounded,
-                          color: Colors.grey[700],
-                        ),
+                      padding: const EdgeInsets.all(8),
+                      child: Icon(
+                        _isCommentsVisible
+                            ? Icons.keyboard_arrow_up_rounded
+                            : Icons.keyboard_arrow_down_rounded,
+                        color: Colors.grey[700],
                       ),
                     ),
                   ),
@@ -1157,7 +1029,7 @@ class _PostCardState extends State<PostCard>
               children: [
                 if (widget.post.comments.isNotEmpty)
                   Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16),
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: Column(
                       children: widget.post.comments
                           .map((comment) => _buildCommentItem(comment))
@@ -1173,55 +1045,176 @@ class _PostCardState extends State<PostCard>
     );
   }
 
-  Future<void> _showDeleteConfirmationDialog() async {
-    return showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Row(
-          children: [
-            Icon(Icons.warning_amber_rounded, color: Colors.orange[700]),
-            SizedBox(width: 8),
-            Text('Delete Post'),
-          ],
+  Widget _buildCommentInput() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.only(
+          bottomLeft: Radius.circular(20),
+          bottomRight: Radius.circular(20),
         ),
-        content: Text(
-            'Are you sure you want to delete this post? This action cannot be undone.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('Cancel', style: TextStyle(color: Colors.grey[700])),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, -4),
           ),
-          ElevatedButton(
-            onPressed: () async {
-              try {
-                await _postService.deletePost(widget.post.id);
-                Navigator.pop(context);
-                _showSnackBar('Post deleted successfully');
-              } catch (e) {
-                Navigator.pop(context);
-                _showSnackBar('Failed to delete post: $e', isError: true);
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red[400],
-              foregroundColor: Colors.white,
-            ),
-            child: Text('Delete'),
+        ],
+      ),
+      child: Column(
+        children: [
+          if (_selectedImage != null || _webImage != null) ...[
+            _buildImagePreview(),
+            const SizedBox(height: 16),
+          ],
+          Row(
+            children: [
+              Expanded(
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.grey[100],
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: _commentController,
+                          decoration: InputDecoration(
+                            hintText: context
+                                .read<Language>()
+                                .get('Write a comment...'),
+                            hintStyle: TextStyle(
+                              color: Colors.grey[500],
+                              fontSize: 14,
+                            ),
+                            border: InputBorder.none,
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 14,
+                            ),
+                          ),
+                          maxLines: 1,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: Colors.black87,
+                          ),
+                        ),
+                      ),
+                      Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(20),
+                          onTap: () async {
+                            final picked = await ImagePicker()
+                                .pickImage(source: ImageSource.gallery);
+                            if (picked != null) {
+                              if (kIsWeb) {
+                                final bytes = await picked.readAsBytes();
+                                setState(() => _webImage = bytes);
+                              } else {
+                                setState(
+                                    () => _selectedImage = File(picked.path));
+                              }
+                            }
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.all(10),
+                            child: Icon(
+                              Icons.photo_library_rounded,
+                              color: Colors.grey[700],
+                              size: 22,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(20),
+                  onTap: _isSubmitting ? null : _submitComment,
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: _isSubmitting ? Colors.grey[300] : _primaryColor,
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: _primaryColor.withOpacity(0.3),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: _isSubmitting
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : const Icon(
+                            Icons.send_rounded,
+                            color: Colors.white,
+                            size: 20,
+                          ),
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),
     );
   }
 
-  Future<void> _handleArchivePost() async {
-    try {
-      await _postService.archivePost(widget.post.id);
+  Future<void> _showDeleteConfirmationDialog() async {
+    final language = Provider.of<Language>(context, listen: false);
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(language.get('delete_post')),
+        content: Text(language.get('delete_confirmation')),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(language.get('no')),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(language.get('yes')),
+          ),
+        ],
+      ),
+    );
+
+    if (result == true) {
+      // Handle post deletion
       if (widget.onPostArchived != null) {
         widget.onPostArchived!();
       }
-      _showSnackBar('Post archived successfully');
-    } catch (e) {
-      _showSnackBar('Failed to archive post: $e', isError: true);
+    }
+  }
+
+  Future<void> _handleArchivePost() async {
+    // Handle post archiving
+    if (widget.onPostArchived != null) {
+      widget.onPostArchived!();
     }
   }
 
