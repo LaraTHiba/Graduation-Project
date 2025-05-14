@@ -408,7 +408,7 @@ class _ProfilePageState extends State<ProfilePage> {
                             if (!isCompanyUser)
                               ListTile(
                                 leading: const Icon(Icons.upload_file),
-                                title: const Text('Add CV'),
+                                title: Text(language.get('Add CV')),
                                 onTap: () {
                                   // TODO: Implement CV upload
                                 },
@@ -517,12 +517,12 @@ class _ProfilePageState extends State<ProfilePage> {
                                       else
                                         IconButton(
                                           icon: Icon(Icons.save),
-                                          tooltip: 'Save changes',
+                                          tooltip: language.get('Save'),
                                           onPressed: _updateProfile,
                                         ),
                                       IconButton(
                                         icon: Icon(Icons.cancel),
-                                        tooltip: 'Cancel editing',
+                                        tooltip: language.get('Cancel'),
                                         onPressed: _isSaving
                                             ? null
                                             : () {
@@ -559,13 +559,13 @@ class _ProfilePageState extends State<ProfilePage> {
                                     children: [
                                       IconButton(
                                         icon: Icon(Icons.settings),
-                                        tooltip: 'Settings',
+                                        tooltip: language.get('settings'),
                                         onPressed: () => setState(
                                             () => _isSettingsOpen = true),
                                       ),
                                       IconButton(
                                         icon: Icon(Icons.edit),
-                                        tooltip: 'Edit profile',
+                                        tooltip: language.get('Edit profile'),
                                         onPressed: () =>
                                             setState(() => _isEditing = true),
                                       ),
@@ -703,7 +703,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                 if (_isEditing) ...[
                                   SizedBox(height: 24),
                                   Text(
-                                    'Profile Details',
+                                    language.get('Profile Details'),
                                     style: GoogleFonts.mukta(
                                       fontSize: 18,
                                       fontWeight: FontWeight.bold,
@@ -712,32 +712,33 @@ class _ProfilePageState extends State<ProfilePage> {
                                   ),
                                   SizedBox(height: 16),
                                   _buildEditableField(
-                                    'Full Name',
+                                    language.get('Full Name'),
                                     _fullNameController,
                                     Icons.person,
                                     validator: (value) {
                                       if (value == null || value.isEmpty) {
-                                        return 'Please enter your name';
+                                        return language
+                                            .get('Please enter your name');
                                       }
                                       return null;
                                     },
                                   ),
                                   SizedBox(height: 12),
                                   _buildEditableField(
-                                    'Bio',
+                                    language.get('Bio'),
                                     _bioController,
                                     Icons.description,
                                     maxLines: 3,
                                   ),
                                   SizedBox(height: 12),
                                   _buildEditableField(
-                                    'Location',
+                                    language.get('Location'),
                                     _locationController,
                                     Icons.location_on,
                                   ),
                                   SizedBox(height: 12),
                                   _buildEditableField(
-                                    'Date of Birth',
+                                    language.get('Date of Birth'),
                                     _dobController,
                                     Icons.calendar_today,
                                     readOnly: true,
@@ -747,7 +748,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                   ),
                                   SizedBox(height: 24),
                                   Text(
-                                    'Account Information',
+                                    language.get('Account Information'),
                                     style: GoogleFonts.mukta(
                                       fontSize: 18,
                                       fontWeight: FontWeight.bold,
@@ -756,7 +757,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                   ),
                                   SizedBox(height: 16),
                                   _buildEditableField(
-                                    'Phone Number',
+                                    language.get('Phone Number'),
                                     _phoneNumberController,
                                     Icons.phone,
                                     onChanged: (value) {
@@ -767,7 +768,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                   ),
                                   SizedBox(height: 12),
                                   _buildEditableField(
-                                    'User Type',
+                                    language.get('User Type'),
                                     TextEditingController(
                                         text: _userData['user_type'] ??
                                             'Standard'),
@@ -1031,15 +1032,21 @@ class _ProfilePageState extends State<ProfilePage> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                post['title'] ?? '',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      post['title'] ?? '',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
                               ),
                               const SizedBox(height: 4),
                               Row(

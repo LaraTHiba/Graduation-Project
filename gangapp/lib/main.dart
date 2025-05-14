@@ -43,24 +43,43 @@ class MyApp extends StatelessWidget {
         fontFamily: language.isRTL ? 'Cairo' : 'Roboto',
       ),
       locale: language.isRTL ? const Locale('ar') : const Locale('en'),
-      home: FutureBuilder<bool>(
-        future: authController.isLoggedIn(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Scaffold(
-              body: Center(
-                child: CircularProgressIndicator(),
-              ),
-            );
-          }
-          return snapshot.data == true ? const HomePage() : const LoginPage();
-        },
-      ),
+      home: _AuthWrapper(authController: authController),
       routes: {
         '/home': (context) => const HomePage(),
         '/login': (context) => const LoginPage(),
-        '/explore': (context) =>
-            const HomePage(), // Temporarily using HomePage for explore
+        '/explore': (context) => const HomePage(),
+      },
+    );
+  }
+}
+
+class _AuthWrapper extends StatelessWidget {
+  final AuthController authController;
+
+  const _AuthWrapper({
+    required this.authController,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<bool>(
+      future: authController.isLoggedIn(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(
+            body: Center(
+              child: CircularProgressIndicator(),
+            ),
+          );
+        }
+
+        // If there's an error or the user is not logged in, show login page
+        if (snapshot.hasError || snapshot.data != true) {
+          return const LoginPage();
+        }
+
+        // If the user is logged in, show home page
+        return const HomePage();
       },
     );
   }

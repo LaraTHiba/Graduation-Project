@@ -6,7 +6,6 @@ import '../../services/api_service.dart';
 import '../../views/create_post_screen.dart';
 import 'dart:typed_data';
 import 'dart:io';
-
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import '../../controllers/profile_controller.dart';
@@ -53,6 +52,8 @@ class _PostCardState extends State<PostCard>
     offset: const Offset(0, 4),
   );
 
+  late final Language language;
+
   @override
   void initState() {
     super.initState();
@@ -64,6 +65,7 @@ class _PostCardState extends State<PostCard>
       parent: _animationController,
       curve: Curves.easeInOut,
     );
+    language = Provider.of<Language>(context, listen: false);
   }
 
   @override
@@ -76,7 +78,7 @@ class _PostCardState extends State<PostCard>
 
   Future<void> _submitComment() async {
     if (_commentController.text.trim().isEmpty) {
-      _showSnackBar("Please write a comment", isError: true);
+      _showSnackBar(language.get('please_write_a_comment'), isError: true);
       return;
     }
 
@@ -119,9 +121,9 @@ class _PostCardState extends State<PostCard>
         });
       }
 
-      _showSnackBar("Comment posted successfully");
+      _showSnackBar(language.get('comment_posted_successfully'));
     } catch (e) {
-      _showSnackBar("Error: $e", isError: true);
+      _showSnackBar(language.get('error') + e.toString(), isError: true);
     } finally {
       if (mounted) {
         setState(() => _isSubmitting = false);
@@ -130,7 +132,6 @@ class _PostCardState extends State<PostCard>
   }
 
   void _showSnackBar(String message, {bool isError = false}) {
-    final language = Provider.of<Language>(context, listen: false);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
@@ -304,7 +305,8 @@ class _PostCardState extends State<PostCard>
                                                   Icon(Icons.edit_rounded,
                                                       color: Colors.grey[700]),
                                                   SizedBox(width: 8),
-                                                  Text('Edit Comment'),
+                                                  Text(language
+                                                      .get('Edit comment')),
                                                 ],
                                               ),
                                             ),
@@ -315,7 +317,9 @@ class _PostCardState extends State<PostCard>
                                                   Icon(Icons.delete_rounded,
                                                       color: Colors.red[400]),
                                                   SizedBox(width: 8),
-                                                  Text('Delete Comment',
+                                                  Text(
+                                                      language.get(
+                                                          'Delete comment'),
                                                       style: TextStyle(
                                                           color:
                                                               Colors.red[400])),
@@ -369,7 +373,7 @@ class _PostCardState extends State<PostCard>
                             icon: Icon(Icons.reply_rounded,
                                 size: 16, color: Colors.grey[600]),
                             label: Text(
-                              context.read<Language>().get('reply'),
+                              language.get('reply'),
                               style: TextStyle(
                                 color: Colors.grey[600],
                                 fontSize: 12,
@@ -398,19 +402,17 @@ class _PostCardState extends State<PostCard>
     File? selectedImage;
     Uint8List? webImage;
 
-    final language = Provider.of<Language>(context, listen: false);
-
     return showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('${language.get('Reply to')} ${parentComment.username}'),
+        title: Text(language.get('Reply to') + ' ' + parentComment.username),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
               controller: replyController,
               decoration: InputDecoration(
-                hintText: language.get('Write your reply...'),
+                hintText: language.get('write_your_reply'),
                 border: OutlineInputBorder(),
               ),
               maxLines: 3,
@@ -437,12 +439,12 @@ class _PostCardState extends State<PostCard>
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text(language.get('Cancel')),
+            child: Text(language.get('cancel')),
           ),
           ElevatedButton(
             onPressed: () async {
               if (replyController.text.trim().isEmpty) {
-                _showSnackBar(language.get('Please write a reply'),
+                _showSnackBar(language.get('please_write_a_reply'),
                     isError: true);
                 return;
               }
@@ -491,9 +493,10 @@ class _PostCardState extends State<PostCard>
                 }
 
                 Navigator.pop(context);
-                _showSnackBar("Reply posted successfully");
+                _showSnackBar(language.get('reply_posted_successfully'));
               } catch (e) {
-                _showSnackBar("Error: $e", isError: true);
+                _showSnackBar(language.get('error') + e.toString(),
+                    isError: true);
               }
             },
             child: Text(language.get('Post Reply')),
@@ -547,7 +550,7 @@ class _PostCardState extends State<PostCard>
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Flexible(
+                          Expanded(
                             child: Text(
                               reply.username,
                               style: TextStyle(
@@ -584,9 +587,7 @@ class _PostCardState extends State<PostCard>
                                           Icon(Icons.edit_rounded,
                                               color: Colors.grey[700]),
                                           SizedBox(width: 8),
-                                          Text(context
-                                              .read<Language>()
-                                              .get('Edit Reply')),
+                                          Text(language.get('Edit reply')),
                                         ],
                                       ),
                                     ),
@@ -598,9 +599,7 @@ class _PostCardState extends State<PostCard>
                                               color: Colors.red[400]),
                                           SizedBox(width: 8),
                                           Text(
-                                            context
-                                                .read<Language>()
-                                                .get('Delete Reply'),
+                                            language.get('Delete reply'),
                                             style: TextStyle(
                                                 color: Colors.red[400]),
                                           ),
@@ -667,7 +666,7 @@ class _PostCardState extends State<PostCard>
       _profileImageCache[username] = profileImage;
       return profileImage;
     } catch (e) {
-      print('Error fetching profile image: $e');
+      print(language.get('error_fetching_profile_image') + e.toString());
       return null;
     }
   }
@@ -739,7 +738,6 @@ class _PostCardState extends State<PostCard>
   }
 
   Widget _buildPostHeader() {
-    final language = Provider.of<Language>(context, listen: false);
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -899,7 +897,7 @@ class _PostCardState extends State<PostCard>
                     children: [
                       Icon(Icons.edit_rounded, color: Colors.grey[700]),
                       SizedBox(width: 8),
-                      Text('Update Post'),
+                      Text(language.get('Update post')),
                     ],
                   ),
                 ),
@@ -909,7 +907,7 @@ class _PostCardState extends State<PostCard>
                     children: [
                       Icon(Icons.archive_rounded, color: Colors.grey[700]),
                       SizedBox(width: 8),
-                      Text('Archive Post'),
+                      Text(language.get('Archive post')),
                     ],
                   ),
                 ),
@@ -919,7 +917,7 @@ class _PostCardState extends State<PostCard>
                     children: [
                       Icon(Icons.delete_rounded, color: Colors.red[400]),
                       SizedBox(width: 8),
-                      Text('Delete Post',
+                      Text(language.get('Delete post'),
                           style: TextStyle(color: Colors.red[400])),
                     ],
                   ),
@@ -954,7 +952,6 @@ class _PostCardState extends State<PostCard>
   }
 
   Widget _buildCommentsSection() {
-    final language = Provider.of<Language>(context, listen: false);
     return Container(
       decoration: BoxDecoration(
         color: Colors.grey[50],
@@ -979,7 +976,7 @@ class _PostCardState extends State<PostCard>
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      language.get('comments'),
+                      language.get('Comments'),
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -1099,9 +1096,7 @@ class _PostCardState extends State<PostCard>
                         child: TextField(
                           controller: _commentController,
                           decoration: InputDecoration(
-                            hintText: context
-                                .read<Language>()
-                                .get('Write a comment...'),
+                            hintText: language.get('write_a_comment'),
                             hintStyle: TextStyle(
                               color: Colors.grey[500],
                               fontSize: 14,
@@ -1194,7 +1189,6 @@ class _PostCardState extends State<PostCard>
   }
 
   Future<void> _showDeleteConfirmationDialog() async {
-    final language = Provider.of<Language>(context, listen: false);
     final result = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -1236,15 +1230,15 @@ class _PostCardState extends State<PostCard>
           children: [
             Icon(Icons.warning_amber_rounded, color: Colors.orange[700]),
             SizedBox(width: 8),
-            Text('Delete Comment'),
+            Text(language.get('Delete comment')),
           ],
         ),
-        content: Text(
-            'Are you sure you want to delete this comment? This action cannot be undone.'),
+        content: Text(language.get('delete_comment_confirmation')),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Cancel', style: TextStyle(color: Colors.grey[700])),
+            child: Text(language.get('cancel'),
+                style: TextStyle(color: Colors.grey[700])),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -1267,12 +1261,13 @@ class _PostCardState extends State<PostCard>
                   if (widget.onPostArchived != null) {
                     widget.onPostArchived!();
                   }
-                  _showSnackBar('Comment deleted successfully');
+                  _showSnackBar(language.get('Comment_deleted_successfully'));
                 }
               } catch (e) {
                 if (mounted) {
                   Navigator.pop(context);
-                  _showSnackBar('Failed to delete comment: $e', isError: true);
+                  _showSnackBar(language.get('error') + e.toString(),
+                      isError: true);
                 }
               }
             },
@@ -1280,7 +1275,7 @@ class _PostCardState extends State<PostCard>
               backgroundColor: Colors.red[400],
               foregroundColor: Colors.white,
             ),
-            child: Text('Delete'),
+            child: Text(language.get('delete')),
           ),
         ],
       ),
@@ -1296,14 +1291,14 @@ class _PostCardState extends State<PostCard>
     return showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Edit Comment'),
+        title: Text(language.get('Edit comment')),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
               controller: contentController,
               decoration: InputDecoration(
-                hintText: 'Edit your comment...',
+                hintText: language.get('edit_comment_hint'),
                 border: OutlineInputBorder(),
               ),
               maxLines: 3,
@@ -1323,14 +1318,14 @@ class _PostCardState extends State<PostCard>
                 }
               },
               icon: Icon(Icons.image),
-              label: Text('Change Image'),
+              label: Text(language.get('change_image')),
             ),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Cancel'),
+            child: Text(language.get('cancel')),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -1349,16 +1344,17 @@ class _PostCardState extends State<PostCard>
                   );
                 }
                 Navigator.pop(context);
-                _showSnackBar('Comment updated successfully');
+                _showSnackBar(language.get('comment_updated_successfully'));
                 if (widget.onPostArchived != null) {
                   widget.onPostArchived!();
                 }
               } catch (e) {
                 Navigator.pop(context);
-                _showSnackBar('Failed to update comment: $e', isError: true);
+                _showSnackBar(language.get('error') + e.toString(),
+                    isError: true);
               }
             },
-            child: Text('Save'),
+            child: Text(language.get('save')),
           ),
         ],
       ),

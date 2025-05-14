@@ -104,8 +104,8 @@ class _CreatePostDialogState extends State<CreatePostDialog> {
       Navigator.pop(context);
       _showSnackBar(
         widget.postToEdit != null
-            ? context.read<Language>().get('post_updated')
-            : context.read<Language>().get('post_created'),
+            ? context.read<Language>().get('Post updated')
+            : context.read<Language>().get('Post created'),
       );
     } catch (e) {
       _showSnackBar(
@@ -134,8 +134,8 @@ class _CreatePostDialogState extends State<CreatePostDialog> {
             children: [
               Text(
                 isEditing
-                    ? language.get('edit_post_title')
-                    : language.get('create_post_title'),
+                    ? language.get('Edit post title')
+                    : language.get('Create post title'),
                 style: const TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
@@ -146,7 +146,7 @@ class _CreatePostDialogState extends State<CreatePostDialog> {
               TextFormField(
                 controller: _titleController,
                 decoration: InputDecoration(
-                  labelText: language.get('post_title'),
+                  labelText: language.get('Post title'),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
                   ),
@@ -162,7 +162,7 @@ class _CreatePostDialogState extends State<CreatePostDialog> {
               TextFormField(
                 controller: _contentController,
                 decoration: InputDecoration(
-                  labelText: language.get('post_content'),
+                  labelText: language.get('Post content'),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
                   ),
@@ -205,7 +205,7 @@ class _CreatePostDialogState extends State<CreatePostDialog> {
                     child: OutlinedButton.icon(
                       onPressed: _handleImageUpload,
                       icon: const Icon(Icons.image_rounded),
-                      label: Text(language.get('add_image')),
+                      label: Text(language.get('Add image')),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         shape: RoundedRectangleBorder(
@@ -237,8 +237,8 @@ class _CreatePostDialogState extends State<CreatePostDialog> {
                             )
                           : Text(
                               isEditing
-                                  ? language.get('edit_post')
-                                  : language.get('post'),
+                                  ? language.get('Edit post')
+                                  : language.get('Post'),
                             ),
                     ),
                   ),
