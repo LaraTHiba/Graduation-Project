@@ -62,24 +62,11 @@ class HomeController {
     );
   }
 
-  /// Checks if the user can access groups based on their type
-  bool canAccessGroups(String userType) {
-    return userType != 'Company';
-  }
-
-  /// Handles navigation based on the selected tab and user type
-  bool shouldNavigate(int index, String userType) {
-    if (userType == 'Company') {
-      return index == 2 || index == 3; // Only allow Explore and Profile
-    }
-    return index >= 1; // Allow all except Home (which is handled differently)
-  }
-
   /// Gets the route name for the selected tab
   String? getRouteForTab(int index) {
     switch (index) {
-      case 1:
-        return '/groups';
+      // case 1:
+      //   return '/groups';
       case 2:
         return '/explore';
       default:

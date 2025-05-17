@@ -11,7 +11,6 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'dart:typed_data';
 import 'package:transparent_image/transparent_image.dart';
 import '../widgets/profile_widgets.dart';
-import '../groups/groups.dart';
 import '../../utils/email_validator.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -678,13 +677,10 @@ class _ProfilePageState extends State<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
-    final isCompanyWithCompanyEmail = (_userType == 'Company' &&
-            EmailValidator.isCompanyEmail(_userEmail ?? '')) ||
-        (_userType == 'Company' &&
-            (_userEmail == null || _userEmail?.isEmpty == true));
+    final isCompanyUser = _userType?.toLowerCase() == 'company';
 
     print(
-        'userType: $_userType, userEmail: $_userEmail, isCompanyWithCompanyEmail: $isCompanyWithCompanyEmail');
+        'userType: $_userType, userEmail: $_userEmail, isCompanyUser: $isCompanyUser');
 
     return _isLoading
         ? Scaffold(
@@ -945,108 +941,105 @@ class _ProfilePageState extends State<ProfilePage> {
                   bottomNavigationBar: Container(
                     decoration: BoxDecoration(
                       color: Colors.white,
+                      borderRadius:
+                          BorderRadius.vertical(top: Radius.circular(20)),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
-                          blurRadius: 20,
-                          offset: Offset(0, -5),
+                          color: Colors.black12,
+                          blurRadius: 8,
+                          offset: Offset(0, -2),
                         ),
                       ],
                     ),
                     child: ClipRRect(
                       borderRadius:
                           BorderRadius.vertical(top: Radius.circular(20)),
-                      child: Container(
-                        height: 70,
-                        color: _primaryColor,
-                        child: BottomNavigationBar(
-                          currentIndex: _userType == 'Company' ? 2 : 3,
-                          onTap: (index) {
-                            if (_userType == 'Company') {
-                              switch (index) {
-                                case 0:
-                                  Navigator.pushReplacementNamed(
-                                      context, '/home');
-                                  break;
-                                case 1:
-                                  Navigator.pushReplacementNamed(
-                                      context, '/explore');
-                                  break;
-                                case 2:
-                                  break;
-                              }
-                            } else {
-                              switch (index) {
-                                case 0:
-                                  Navigator.pushReplacementNamed(
-                                      context, '/home');
-                                  break;
-                                case 1:
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                        builder: (context) =>
-                                            const GroupsPage()),
-                                  );
-                                  break;
-                                case 2:
-                                  Navigator.pushReplacementNamed(
-                                      context, '/explore');
-                                  break;
-                                case 3:
-                                  break;
-                              }
+                      child: BottomNavigationBar(
+                        currentIndex: isCompanyUser ? 2 : 3,
+                        onTap: (index) {
+                          if (isCompanyUser) {
+                            // Company: Home (0), Explore (1), Profile (2)
+                            switch (index) {
+                              case 0:
+                                Navigator.pushReplacementNamed(
+                                    context, '/home');
+                                break;
+                              case 1:
+                                Navigator.pushReplacementNamed(
+                                    context, '/explore');
+                                break;
+                              case 2:
+                                // Already on profile
+                                break;
                             }
-                          },
-                          type: BottomNavigationBarType.fixed,
-                          backgroundColor: Colors.transparent,
-                          elevation: 0,
-                          selectedItemColor: Colors.white,
-                          unselectedItemColor: Colors.white.withOpacity(0.6),
-                          selectedLabelStyle: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12,
-                            letterSpacing: 0.5,
-                          ),
-                          unselectedLabelStyle: TextStyle(
-                            fontWeight: FontWeight.normal,
-                            fontSize: 12,
-                            letterSpacing: 0.5,
-                          ),
-                          items: isCompanyWithCompanyEmail
-                              ? [
-                                  const BottomNavigationBarItem(
-                                    icon: Icon(Icons.home_rounded, size: 24),
-                                    label: 'Home',
-                                  ),
-                                  const BottomNavigationBarItem(
-                                    icon: Icon(Icons.explore_rounded, size: 24),
-                                    label: 'Explore',
-                                  ),
-                                  BottomNavigationBarItem(
-                                    icon: _buildProfileIcon(),
-                                    label: 'Profile',
-                                  ),
-                                ]
-                              : [
-                                  const BottomNavigationBarItem(
-                                    icon: Icon(Icons.home_rounded, size: 24),
-                                    label: 'Home',
-                                  ),
-                                  const BottomNavigationBarItem(
-                                    icon: Icon(Icons.groups_rounded, size: 24),
-                                    label: 'Groups',
-                                  ),
-                                  const BottomNavigationBarItem(
-                                    icon: Icon(Icons.explore_rounded, size: 24),
-                                    label: 'Explore',
-                                  ),
-                                  BottomNavigationBarItem(
-                                    icon: _buildProfileIcon(),
-                                    label: 'Profile',
-                                  ),
-                                ],
+                          } else {
+                            // User: Home (0), Groups (1), Explore (2), Profile (3)
+                            switch (index) {
+                              case 0:
+                                Navigator.pushReplacementNamed(
+                                    context, '/home');
+                                break;
+                              case 1:
+                                // Groups: do nothing or implement navigation
+                                break;
+                              case 2:
+                                Navigator.pushReplacementNamed(
+                                    context, '/explore');
+                                break;
+                              case 3:
+                                // Already on profile
+                                break;
+                            }
+                          }
+                        },
+                        type: BottomNavigationBarType.fixed,
+                        backgroundColor: Colors.transparent,
+                        elevation: 0,
+                        selectedItemColor: Colors.white,
+                        unselectedItemColor: Colors.white.withOpacity(0.6),
+                        selectedLabelStyle: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                          letterSpacing: 0.5,
                         ),
+                        unselectedLabelStyle: TextStyle(
+                          fontWeight: FontWeight.normal,
+                          fontSize: 12,
+                          letterSpacing: 0.5,
+                        ),
+                        items: isCompanyUser
+                            ? [
+                                BottomNavigationBarItem(
+                                  icon: Icon(Icons.home_rounded),
+                                  label: 'Home',
+                                ),
+                                BottomNavigationBarItem(
+                                  icon: Icon(Icons.explore_rounded),
+                                  label: 'Explore',
+                                ),
+                                BottomNavigationBarItem(
+                                  icon: Icon(Icons.person_rounded),
+                                  label: 'Profile',
+                                ),
+                              ]
+                            : [
+                                BottomNavigationBarItem(
+                                  icon: Icon(Icons.home_rounded),
+                                  label: 'Home',
+                                ),
+                                BottomNavigationBarItem(
+                                  icon: Icon(Icons.group_rounded),
+                                  label: 'Groups',
+                                ),
+                                BottomNavigationBarItem(
+                                  icon: Icon(Icons.explore_rounded),
+                                  label: 'Explore',
+                                ),
+                                BottomNavigationBarItem(
+                                  icon: Icon(Icons.person_rounded),
+                                  label: 'Profile',
+                                ),
+                              ],
                       ),
                     ),
                   ),

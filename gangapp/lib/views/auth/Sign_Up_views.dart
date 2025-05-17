@@ -64,21 +64,21 @@ class _SignUpPageState extends State<SignUpPage> {
       );
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text("Registration successful! Please login."),
-            backgroundColor: Colors.green,
-          ),
-        );
+          content: Text("Registration successful! Please login."),
+          backgroundColor: Colors.green,
+        ),
+      );
 
-        Navigator.pushReplacement(
-          context,
+      Navigator.pushReplacement(
+        context,
           MaterialPageRoute(builder: (context) => const LoginPage()),
-        );
+      );
       }
     } catch (e) {
       if (mounted) {
-        _showErrorDialog("Registration Failed", e.toString());
+      _showErrorDialog("Registration Failed", e.toString());
       }
     } finally {
       if (mounted) {
@@ -105,6 +105,7 @@ class _SignUpPageState extends State<SignUpPage> {
 
   @override
   Widget build(BuildContext context) {
+    print('userType: $_selectedUserType');
     return Scaffold(
       appBar: AppBar(
         title: const Text('Create Account'),
@@ -184,9 +185,9 @@ class _SignUpPageState extends State<SignUpPage> {
                   label: 'Password',
                   icon: Icons.lock,
                   obscureText: !_passwordVisible,
-                  suffixIcon: IconButton(
+                    suffixIcon: IconButton(
                     icon: Icon(_passwordVisible
-                        ? Icons.visibility
+                            ? Icons.visibility
                         : Icons.visibility_off),
                     onPressed: () =>
                         setState(() => _passwordVisible = !_passwordVisible),
@@ -200,9 +201,9 @@ class _SignUpPageState extends State<SignUpPage> {
                   label: 'Confirm Password',
                   icon: Icons.lock,
                   obscureText: !_confirmPasswordVisible,
-                  suffixIcon: IconButton(
+                    suffixIcon: IconButton(
                     icon: Icon(_confirmPasswordVisible
-                        ? Icons.visibility
+                            ? Icons.visibility
                         : Icons.visibility_off),
                     onPressed: () => setState(() =>
                         _confirmPasswordVisible = !_confirmPasswordVisible),

@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../home/Home_Page.dart';
 import 'Sign_Up_views.dart';
 import '../../controllers/auth_controller.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -25,6 +26,10 @@ class _LoginPageState extends State<LoginPage> {
     try {
       await _authController.login(username, password);
       if (mounted) {
+        final prefs = await SharedPreferences.getInstance();
+        final userType = prefs.getString('user_type') ?? 'Unknown';
+        print(
+            'Login Success: username=$username, password=$password, userType=$userType');
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const HomePage()),

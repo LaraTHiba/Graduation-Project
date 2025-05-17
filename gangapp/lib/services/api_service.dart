@@ -58,7 +58,50 @@ class ApiService {
   // Get auth token
   Future<String> getAuthToken() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getString('access_token') ?? '';
+    String? token = prefs.getString('access_token');
+
+    if (token == null || token.isEmpty) {
+      throw Exception('No authentication token found. Please log in again.');
+    }
+
+    // Check if token is expired (you can add token expiration check here)
+    // For now, we'll just try to refresh if the token is invalid
+    try {
+      final response = await http.get(
+        Uri.parse(myProfileEndpoint),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 401) {
+        // Token is invalid, try to refresh
+        final refreshToken = prefs.getString('refresh_token');
+        if (refreshToken == null || refreshToken.isEmpty) {
+          throw Exception('No refresh token found. Please log in again.');
+        }
+
+        final refreshResponse = await http.post(
+          Uri.parse(tokenRefreshEndpoint),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({'refresh': refreshToken}),
+        );
+
+        if (refreshResponse.statusCode == 200) {
+          final data = jsonDecode(refreshResponse.body);
+          final newToken = data['access'] as String;
+          await prefs.setString('access_token', newToken);
+          return newToken;
+        } else {
+          throw Exception('Failed to refresh token. Please log in again.');
+        }
+      }
+    } catch (e) {
+      throw Exception('Authentication error: $e');
+    }
+
+    return token;
   }
 
   // Login
@@ -74,6 +117,7 @@ class ApiService {
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
+      print('Login response: $data'); // Debug print
 
       if (data['access'] == null || data['refresh'] == null) {
         throw Exception('Invalid response format: missing tokens');
@@ -83,6 +127,11 @@ class ApiService {
       await prefs.setString('access_token', data['access']);
       await prefs.setString('refresh_token', data['refresh']);
       await prefs.setString('username', username);
+
+      // Save user_type if present in response
+      if (data['user'] != null && data['user']['user_type'] != null) {
+        await prefs.setString('user_type', data['user']['user_type']);
+      }
 
       return data;
     } else {
@@ -548,7 +597,9 @@ class ApiService {
       // Add text fields
       request.fields['title'] = title;
       request.fields['content'] = content;
-      request.fields['interest'] = interest.toString();
+      if (interest != null) {
+        request.fields['interest'] = interest.toString();
+      }
 
       // Add image if selected
       if (image != null) {
@@ -563,10 +614,9 @@ class ApiService {
             filename = 'post_image_${timestamp}.jpg';
           }
 
-          // Add original_filename field that the backend might be using
+          // Add original_filename field
           request.fields['original_filename'] = filename;
 
-          // Add the image directly to the post request
           request.files.add(await http.MultipartFile.fromPath(
             'image',
             image.path,
@@ -579,13 +629,13 @@ class ApiService {
 
       // Send the request
       try {
-        var streamedResponse = await request.send();
-        var response = await http.Response.fromStream(streamedResponse);
+      var streamedResponse = await request.send();
+      var response = await http.Response.fromStream(streamedResponse);
 
-        if (response.statusCode == 201) {
-          return jsonDecode(response.body);
-        } else {
-          throw Exception('Failed to create post: ${response.body}');
+      if (response.statusCode == 201) {
+        return jsonDecode(response.body);
+      } else {
+        throw Exception('Failed to create post: ${response.body}');
         }
       } catch (e) {
         throw Exception('Error sending request: $e');
@@ -690,7 +740,9 @@ class ApiService {
       // Add text fields
       request.fields['title'] = title;
       request.fields['content'] = content;
-      request.fields['interest'] = interest.toString();
+      if (interest != null) {
+        request.fields['interest'] = interest.toString();
+      }
 
       // Add image if selected
       if (imageBytes != null) {
