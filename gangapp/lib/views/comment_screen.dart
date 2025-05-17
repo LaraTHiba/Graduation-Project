@@ -5,8 +5,11 @@ import 'package:image_picker/image_picker.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import '../../models/comment.dart';
 import '../../models/post.dart';
+import '../../services/api_service.dart';
 import '../../services/post_service.dart';
 import 'package:intl/intl.dart';
+import '../../languages/language.dart';
+import 'package:provider/provider.dart';
 
 class CommentScreen extends StatefulWidget {
   final int postId;
@@ -299,7 +302,9 @@ class _CommentScreenState extends State<CommentScreen> {
                       child: TextField(
                         controller: _commentController,
                         decoration: InputDecoration(
-                          hintText: 'Write a comment...',
+                          hintText: context
+                              .read<Language>()
+                              .get('Write a comment...'),
                           border: OutlineInputBorder(),
                           contentPadding: EdgeInsets.symmetric(
                             horizontal: 16,

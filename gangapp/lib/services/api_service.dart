@@ -957,7 +957,7 @@ class ApiService {
     final token = await getAuthToken();
 
     final response = await http.get(
-      Uri.parse('$baseUrl/posts/$postId/comments/'),
+      Uri.parse('$baseUrl/posts/$postId/comments/?include_replies=true'),
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token',
@@ -965,7 +965,9 @@ class ApiService {
     );
 
     if (response.statusCode == 200) {
-      return jsonDecode(response.body);
+      final List<dynamic> comments = jsonDecode(response.body);
+      print('Fetched comments with replies: $comments'); // Debug print
+      return comments;
     } else {
       throw Exception('Failed to load comments: ${response.body}');
     }
@@ -1138,7 +1140,9 @@ class ApiService {
 
     // Add text fields
     request.fields['content'] = content;
-    request.fields['user'] = userId.toString(); // Add the required user field
+    request.fields['user'] = userId.toString();
+    request.fields['parent_comment'] =
+        commentId.toString(); // Add parent comment ID
 
     // Add image if selected
     if (image != null) {
@@ -1212,7 +1216,9 @@ class ApiService {
 
     // Add text fields
     request.fields['content'] = content;
-    request.fields['user'] = userId.toString(); // Add the required user field
+    request.fields['user'] = userId.toString();
+    request.fields['parent_comment'] =
+        commentId.toString(); // Add parent comment ID
 
     // Add image if selected
     if (imageBytes != null) {
@@ -1557,7 +1563,7 @@ class ApiService {
     final token = await getAuthToken();
 
     final response = await http.delete(
-      Uri.parse('$baseUrl/comments/posts/$commentId/hard-delete/'),
+      Uri.parse('$baseUrl/comments/$commentId/hard-delete/'),
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token',

@@ -3,6 +3,9 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+import os
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
+from django.conf import settings
 
 User = get_user_model()
 
@@ -167,4 +170,24 @@ class ResetPasswordSerializer(serializers.Serializer):
     def validate(self, attrs):
         if attrs['new_password'] != attrs['new_password2']:
             raise serializers.ValidationError({"new_password": "Password fields didn't match."})
-        return attrs 
+        return attrs
+
+parser_classes = [MultiPartParser, FormParser, JSONParser]
+
+def validate_profile_picture(self, value):
+    if value:
+        # Validate file type
+        if not value.name.lower().endswith(('.png', '.jpg', '.jpeg', '.gif')):
+            raise serializers.ValidationError("Only image files are allowed")
+        # Validate file size (limit to 5MB)
+        if value.size > 5 * 1024 * 1024:
+            raise serializers.ValidationError("Image file too large (> 5MB)")
+    return value
+
+def get_image_full_url(self, obj):
+    if obj.image:
+        request = self.context.get('request')
+        if request:
+            return request.build_absolute_uri(obj.image.url)
+        return obj.image.url
+    return obj.image_url 

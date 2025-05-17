@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../languages/language.dart';
 import 'profile_icon.dart';
 
 /// Bottom navigation bar for the home page
@@ -29,20 +31,21 @@ class HomeBottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final language = context.watch<Language>();
     final isCompanyUser = userType == 'Company';
     final items = <BottomNavigationBarItem>[
-      const BottomNavigationBarItem(
-        icon: Icon(Icons.home_rounded),
-        label: 'Home',
+      BottomNavigationBarItem(
+        icon: const Icon(Icons.home_rounded),
+        label: language.get('home'),
       ),
       if (!isCompanyUser)
-        const BottomNavigationBarItem(
-          icon: Icon(Icons.group_rounded),
-          label: 'Groups',
+        BottomNavigationBarItem(
+          icon: const Icon(Icons.group_rounded),
+          label: language.get('groups'),
         ),
-      const BottomNavigationBarItem(
-        icon: Icon(Icons.explore_rounded),
-        label: 'Explore',
+      BottomNavigationBarItem(
+        icon: const Icon(Icons.explore_rounded),
+        label: language.get('explore'),
       ),
       BottomNavigationBarItem(
         icon: ProfileIcon(
@@ -51,7 +54,7 @@ class HomeBottomNav extends StatelessWidget {
           size: 26,
           iconColor: Colors.white,
         ),
-        label: 'Profile',
+        label: language.get('profile'),
       ),
     ];
 

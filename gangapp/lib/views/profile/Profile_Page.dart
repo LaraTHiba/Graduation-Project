@@ -12,6 +12,10 @@ import 'dart:typed_data';
 import 'package:transparent_image/transparent_image.dart';
 import '../widgets/profile_widgets.dart';
 import '../../utils/email_validator.dart';
+import '../widgets/profile_icon.dart';
+import 'dart:ui';
+import 'package:provider/provider.dart';
+import '../../languages/language.dart';
 
 class ProfilePage extends StatefulWidget {
   final String? username;
@@ -79,7 +83,7 @@ class _ProfilePageState extends State<ProfilePage> {
       _isCurrentUser =
           await _profileController.isCurrentUserProfile(widget.username!);
     }
-    _fetchUserProfile();
+    await _fetchUserProfile();
   }
 
   Future<void> _fetchUserProfile() async {
@@ -161,7 +165,7 @@ class _ProfilePageState extends State<ProfilePage> {
         _isSaving = false;
       });
 
-      _fetchUserProfile();
+      await _fetchUserProfile();
     } catch (e) {
       _showErrorDialog('Update Failed', 'Could not update profile: $e');
       setState(() => _isSaving = false);
@@ -313,374 +317,146 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Widget _buildSettingsPanel() {
+    final language = context.watch<Language>();
+    final isCompanyUser = _userType?.toLowerCase() == 'company';
+
     return AnimatedPositioned(
-      duration: Duration(milliseconds: 300),
+      duration: const Duration(milliseconds: 300),
       right: _isSettingsOpen ? 0 : -300,
       top: 0,
       bottom: 0,
       width: 300,
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 10,
-              offset: Offset(-2, 0),
-            ),
-          ],
-        ),
-        child: Column(
-          children: [
-            Container(
-              padding: EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: _primaryColor,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 5,
-                    offset: Offset(0, 2),
-                  ),
-                ],
+      child: Material(
+        elevation: 8,
+        borderRadius: BorderRadius.circular(24),
+        child: Container(
+          margin: const EdgeInsets.symmetric(vertical: 24, horizontal: 8),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.85),
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.12),
+                blurRadius: 24,
+                offset: const Offset(-8, 8),
               ),
-              child: Row(
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(24),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+              child: Column(
                 children: [
-                  IconButton(
-                    icon: Icon(Icons.arrow_back, color: Colors.white),
-                    onPressed: () => setState(() => _isSettingsOpen = false),
-                  ),
-                  SizedBox(width: 8),
-                  Text(
-                    'Settings',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  Spacer(),
-                  IconButton(
-                    icon: Icon(_isEditing ? Icons.check : Icons.edit,
-                        color: Colors.white),
-                    onPressed: () {
-                      if (_isEditing) _updateProfile();
-                      setState(() => _isEditing = !_isEditing);
-                    },
-                  ),
-                ],
-              ),
-            ),
-            Expanded(
-              child: SingleChildScrollView(
-                padding: EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Profile Details',
-                      style: GoogleFonts.mukta(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: _primaryColor,
-                      ),
-                    ),
-                    SizedBox(height: 16),
-                    _buildEditableField(
-                      'Full Name',
-                      _fullNameController,
-                      Icons.person,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter your name';
-                        }
-                        return null;
-                      },
-                    ),
-                    SizedBox(height: 12),
-                    _buildEditableField(
-                      'Bio',
-                      _bioController,
-                      Icons.description,
-                      maxLines: 3,
-                    ),
-                    SizedBox(height: 12),
-                    _buildEditableField(
-                      'Location',
-                      _locationController,
-                      Icons.location_on,
-                    ),
-                    SizedBox(height: 12),
-                    _buildEditableField(
-                      'Date of Birth',
-                      _dobController,
-                      Icons.calendar_today,
-                      readOnly: true,
-                      onTap: _isEditing ? () => _selectDate(context) : null,
-                    ),
-                    SizedBox(height: 24),
-                    if (_isCurrentUser) ...[
-                      Text(
-                        'Account Information',
-                        style: GoogleFonts.mukta(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: _primaryColor,
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: _primaryColor.withOpacity(0.95),
+                      borderRadius:
+                          const BorderRadius.vertical(top: Radius.circular(24)),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.08),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
                         ),
-                      ),
-                      SizedBox(height: 16),
-                      _buildEditableField(
-                        'Phone Number',
-                        _phoneNumberController,
-                        Icons.phone,
-                        onChanged: (value) {
-                          setState(() {
-                            _userData['phone_number'] = value;
-                          });
-                        },
-                      ),
-                      SizedBox(height: 12),
-                      _buildEditableField(
-                        'User Type',
-                        TextEditingController(
-                            text: _userData['user_type'] ?? 'Standard'),
-                        Icons.person,
-                        readOnly: true,
-                      ),
-                      SizedBox(height: 24),
-                      Center(
-                        child: TextButton(
-                          onPressed: () async {
-                            try {
-                              await _profileController.logout();
-                              Navigator.of(context).pushNamedAndRemoveUntil(
-                                '/login',
-                                (Route<dynamic> route) => false,
-                              );
-                            } catch (e) {
-                              _showErrorDialog(
-                                  'Logout Failed', 'Could not log out: $e');
-                            }
-                          },
-                          style: TextButton.styleFrom(
-                            foregroundColor: Colors.red,
-                            padding: EdgeInsets.symmetric(
-                                horizontal: 20, vertical: 10),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(Icons.logout_rounded, size: 20),
-                              SizedBox(width: 8),
-                              Text(
-                                'Logout',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPostsGrid() {
-    if (_userPosts.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.grey[100],
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.post_add,
-                size: 48,
-                color: Colors.grey[400],
-              ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'No posts yet',
-              style: GoogleFonts.mukta(
-                color: Colors.grey[600],
-                fontSize: 16,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Create your first post to share with the community',
-              style: GoogleFonts.mukta(
-                color: Colors.grey[500],
-                fontSize: 14,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      );
-    }
-
-    return RefreshIndicator(
-      onRefresh: _fetchUserPosts,
-      color: _primaryColor,
-      backgroundColor: Colors.white,
-      child: GridView.builder(
-        shrinkWrap: true,
-        physics: const AlwaysScrollableScrollPhysics(),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 3,
-          crossAxisSpacing: 4,
-          mainAxisSpacing: 4,
-          childAspectRatio: 1,
-        ),
-        itemCount: _userPosts.length,
-        itemBuilder: (context, index) {
-          final post = _userPosts[index];
-          // Try all possible image keys
-          final imageUrl =
-              post['image_url'] ?? post['image'] ?? post['imageUrl'];
-          return Hero(
-            tag: 'post_${post['id']}',
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: () {
-                  // TODO: Navigate to post detail
-                },
-                child: Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(8),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 4,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: Stack(
-                      fit: StackFit.expand,
+                      ],
+                    ),
+                    child: Row(
                       children: [
-                        if (imageUrl != null && imageUrl.toString().isNotEmpty)
-                          Image.network(
-                            imageUrl,
-                            fit: BoxFit.contain,
-                            errorBuilder: (context, error, stackTrace) {
-                              return Container(
-                                color: Colors.grey[200],
-                                child: Icon(
-                                  Icons.image_not_supported,
-                                  color: Colors.grey[400],
-                                ),
-                              );
-                            },
-                          )
-                        else
-                          Container(
-                            color: Colors.grey[200],
-                            child: Icon(
-                              Icons.image_not_supported,
-                              color: Colors.grey[400],
-                            ),
-                          ),
-                        Container(
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                              colors: [
-                                Colors.transparent,
-                                Colors.black.withOpacity(0.7),
-                              ],
-                            ),
-                          ),
+                        IconButton(
+                          icon:
+                              const Icon(Icons.arrow_back, color: Colors.white),
+                          onPressed: () =>
+                              setState(() => _isSettingsOpen = false),
                         ),
-                        Positioned(
-                          bottom: 8,
-                          left: 8,
-                          right: 8,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                post['title'] ?? '',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              const SizedBox(height: 4),
-                              Row(
-                                children: [
-                                  const Icon(
-                                    Icons.favorite,
-                                    color: Colors.white,
-                                    size: 12,
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    '${post['likes_count'] ?? 0}',
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  const Icon(
-                                    Icons.comment,
-                                    color: Colors.white,
-                                    size: 12,
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    '${post['comments_count'] ?? 0}',
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
+                        const SizedBox(width: 8),
+                        Text(
+                          language.get('settings'),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 0.5,
                           ),
                         ),
                       ],
                     ),
                   ),
-                ),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (_isCurrentUser) ...[
+                            ListTile(
+                              leading: const Icon(Icons.language),
+                              title: Text(language.get('language')),
+                              subtitle: Text(
+                                  language.currentLanguageCode == 'ar'
+                                      ? 'العربية'
+                                      : 'English'),
+                              trailing: Switch(
+                                value: language.currentLanguageCode == 'ar',
+                                onChanged: (bool value) {
+                                  language.setLanguage(value ? 'ar' : 'en');
+                                },
+                              ),
+                            ),
+                            const Divider(),
+                            if (!isCompanyUser)
+                              ListTile(
+                                leading: const Icon(Icons.upload_file),
+                                title: Text(language.get('Add CV')),
+                                onTap: () {
+                                  // TODO: Implement CV upload
+                                },
+                              ),
+                            const Divider(),
+                            ListTile(
+                              leading:
+                                  const Icon(Icons.logout, color: Colors.red),
+                              title: Text(
+                                language.get('logout'),
+                                style: const TextStyle(color: Colors.red),
+                              ),
+                              onTap: () async {
+                                try {
+                                  await _profileController.logout();
+                                  if (mounted) {
+                                    Navigator.of(context)
+                                        .pushNamedAndRemoveUntil(
+                                      '/login',
+                                      (Route<dynamic> route) => false,
+                                    );
+                                  }
+                                } catch (e) {
+                                  if (mounted) {
+                                    _showErrorDialog('Logout Failed',
+                                        'Could not log out: $e');
+                                  }
+                                }
+                              },
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
-          );
-        },
+          ),
+        ),
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final language = context.watch<Language>();
     final isCompanyUser = _userType?.toLowerCase() == 'company';
-
-    print(
-        'userType: $_userType, userEmail: $_userEmail, isCompanyUser: $isCompanyUser');
 
     return _isLoading
         ? Scaffold(
@@ -741,12 +517,12 @@ class _ProfilePageState extends State<ProfilePage> {
                                       else
                                         IconButton(
                                           icon: Icon(Icons.save),
-                                          tooltip: 'Save changes',
+                                          tooltip: language.get('Save'),
                                           onPressed: _updateProfile,
                                         ),
                                       IconButton(
                                         icon: Icon(Icons.cancel),
-                                        tooltip: 'Cancel editing',
+                                        tooltip: language.get('Cancel'),
                                         onPressed: _isSaving
                                             ? null
                                             : () {
@@ -766,6 +542,10 @@ class _ProfilePageState extends State<ProfilePage> {
                                                       .text = _userDetails[
                                                           'date_of_birth'] ??
                                                       '';
+                                                  _phoneNumberController.text =
+                                                      _userData[
+                                                              'phone_number'] ??
+                                                          '';
                                                   _profileImageFile = null;
                                                   _backgroundImageFile = null;
                                                   _profileImageWeb = null;
@@ -779,13 +559,13 @@ class _ProfilePageState extends State<ProfilePage> {
                                     children: [
                                       IconButton(
                                         icon: Icon(Icons.settings),
-                                        tooltip: 'Settings',
+                                        tooltip: language.get('settings'),
                                         onPressed: () => setState(
                                             () => _isSettingsOpen = true),
                                       ),
                                       IconButton(
                                         icon: Icon(Icons.edit),
-                                        tooltip: 'Edit profile',
+                                        tooltip: language.get('Edit profile'),
                                         onPressed: () =>
                                             setState(() => _isEditing = true),
                                       ),
@@ -920,9 +700,85 @@ class _ProfilePageState extends State<ProfilePage> {
                                     ],
                                   ),
                                 ),
+                                if (_isEditing) ...[
+                                  SizedBox(height: 24),
+                                  Text(
+                                    language.get('Profile Details'),
+                                    style: GoogleFonts.mukta(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: _primaryColor,
+                                    ),
+                                  ),
+                                  SizedBox(height: 16),
+                                  _buildEditableField(
+                                    language.get('Full Name'),
+                                    _fullNameController,
+                                    Icons.person,
+                                    validator: (value) {
+                                      if (value == null || value.isEmpty) {
+                                        return language
+                                            .get('Please enter your name');
+                                      }
+                                      return null;
+                                    },
+                                  ),
+                                  SizedBox(height: 12),
+                                  _buildEditableField(
+                                    language.get('Bio'),
+                                    _bioController,
+                                    Icons.description,
+                                    maxLines: 3,
+                                  ),
+                                  SizedBox(height: 12),
+                                  _buildEditableField(
+                                    language.get('Location'),
+                                    _locationController,
+                                    Icons.location_on,
+                                  ),
+                                  SizedBox(height: 12),
+                                  _buildEditableField(
+                                    language.get('Date of Birth'),
+                                    _dobController,
+                                    Icons.calendar_today,
+                                    readOnly: true,
+                                    onTap: _isEditing
+                                        ? () => _selectDate(context)
+                                        : null,
+                                  ),
+                                  SizedBox(height: 24),
+                                  Text(
+                                    language.get('Account Information'),
+                                    style: GoogleFonts.mukta(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: _primaryColor,
+                                    ),
+                                  ),
+                                  SizedBox(height: 16),
+                                  _buildEditableField(
+                                    language.get('Phone Number'),
+                                    _phoneNumberController,
+                                    Icons.phone,
+                                    onChanged: (value) {
+                                      setState(() {
+                                        _userData['phone_number'] = value;
+                                      });
+                                    },
+                                  ),
+                                  SizedBox(height: 12),
+                                  _buildEditableField(
+                                    language.get('User Type'),
+                                    TextEditingController(
+                                        text: _userData['user_type'] ??
+                                            'Standard'),
+                                    Icons.person,
+                                    readOnly: true,
+                                  ),
+                                ],
                                 SizedBox(height: 24),
                                 Text(
-                                  'Posts',
+                                  language.get('posts'),
                                   style: GoogleFonts.mukta(
                                     fontSize: 20,
                                     fontWeight: FontWeight.bold,
@@ -938,22 +794,12 @@ class _ProfilePageState extends State<ProfilePage> {
                       ),
                     ],
                   ),
-                  bottomNavigationBar: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius:
-                          BorderRadius.vertical(top: Radius.circular(20)),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black12,
-                          blurRadius: 8,
-                          offset: Offset(0, -2),
-                        ),
-                      ],
-                    ),
-                    child: ClipRRect(
-                      borderRadius:
-                          BorderRadius.vertical(top: Radius.circular(20)),
+                  bottomNavigationBar: ClipRRect(
+                    borderRadius:
+                        const BorderRadius.vertical(top: Radius.circular(20)),
+                    child: Container(
+                      color: const Color(0xFF006C5F),
+                      height: 60,
                       child: BottomNavigationBar(
                         currentIndex: isCompanyUser ? 2 : 3,
                         onTap: (index) {
@@ -980,7 +826,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                     context, '/home');
                                 break;
                               case 1:
-                                // Groups: do nothing or implement navigation
+                                // TODO: Implement groups navigation
                                 break;
                               case 2:
                                 Navigator.pushReplacementNamed(
@@ -993,16 +839,16 @@ class _ProfilePageState extends State<ProfilePage> {
                           }
                         },
                         type: BottomNavigationBarType.fixed,
-                        backgroundColor: Colors.transparent,
-                        elevation: 0,
+                        backgroundColor: const Color(0xFF006C5F),
+                        elevation: 8,
                         selectedItemColor: Colors.white,
-                        unselectedItemColor: Colors.white.withOpacity(0.6),
-                        selectedLabelStyle: TextStyle(
+                        unselectedItemColor: Colors.white70,
+                        selectedLabelStyle: const TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 12,
                           letterSpacing: 0.5,
                         ),
-                        unselectedLabelStyle: TextStyle(
+                        unselectedLabelStyle: const TextStyle(
                           fontWeight: FontWeight.normal,
                           fontSize: 12,
                           letterSpacing: 0.5,
@@ -1010,34 +856,46 @@ class _ProfilePageState extends State<ProfilePage> {
                         items: isCompanyUser
                             ? [
                                 BottomNavigationBarItem(
-                                  icon: Icon(Icons.home_rounded),
-                                  label: 'Home',
+                                  icon: const Icon(Icons.home_rounded),
+                                  label: language.get('home'),
                                 ),
                                 BottomNavigationBarItem(
-                                  icon: Icon(Icons.explore_rounded),
-                                  label: 'Explore',
+                                  icon: const Icon(Icons.explore_rounded),
+                                  label: language.get('explore'),
                                 ),
                                 BottomNavigationBarItem(
-                                  icon: Icon(Icons.person_rounded),
-                                  label: 'Profile',
+                                  icon: ProfileIcon(
+                                    imageUrl:
+                                        _userDetails['profile_picture_url'],
+                                    isLoading: _isLoading,
+                                    size: 26,
+                                    iconColor: Colors.white,
+                                  ),
+                                  label: language.get('profile'),
                                 ),
                               ]
                             : [
                                 BottomNavigationBarItem(
-                                  icon: Icon(Icons.home_rounded),
-                                  label: 'Home',
+                                  icon: const Icon(Icons.home_rounded),
+                                  label: language.get('home'),
                                 ),
                                 BottomNavigationBarItem(
-                                  icon: Icon(Icons.group_rounded),
-                                  label: 'Groups',
+                                  icon: const Icon(Icons.group_rounded),
+                                  label: language.get('groups'),
                                 ),
                                 BottomNavigationBarItem(
-                                  icon: Icon(Icons.explore_rounded),
-                                  label: 'Explore',
+                                  icon: const Icon(Icons.explore_rounded),
+                                  label: language.get('explore'),
                                 ),
                                 BottomNavigationBarItem(
-                                  icon: Icon(Icons.person_rounded),
-                                  label: 'Profile',
+                                  icon: ProfileIcon(
+                                    imageUrl:
+                                        _userDetails['profile_picture_url'],
+                                    isLoading: _isLoading,
+                                    size: 26,
+                                    iconColor: Colors.white,
+                                  ),
+                                  label: language.get('profile'),
                                 ),
                               ],
                       ),
@@ -1048,6 +906,193 @@ class _ProfilePageState extends State<ProfilePage> {
               _buildSettingsPanel(),
             ],
           );
+  }
+
+  Widget _buildPostsGrid() {
+    if (_userPosts.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.grey[100],
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.post_add,
+                size: 48,
+                color: Colors.grey[400],
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'No posts yet',
+              style: GoogleFonts.mukta(
+                color: Colors.grey[600],
+                fontSize: 16,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Create your first post to share with the community',
+              style: GoogleFonts.mukta(
+                color: Colors.grey[500],
+                fontSize: 14,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: _fetchUserPosts,
+      color: _primaryColor,
+      backgroundColor: Colors.white,
+      child: GridView.builder(
+        shrinkWrap: true,
+        physics: const AlwaysScrollableScrollPhysics(),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 3,
+          crossAxisSpacing: 4,
+          mainAxisSpacing: 4,
+          childAspectRatio: 1,
+        ),
+        itemCount: _userPosts.length,
+        itemBuilder: (context, index) {
+          final post = _userPosts[index];
+          // Try all possible image keys
+          final imageUrl =
+              post['image_url'] ?? post['image'] ?? post['imageUrl'];
+          return Hero(
+            tag: 'post_${post['id']}',
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () {
+                  // TODO: Navigate to post detail
+                },
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(8),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        if (imageUrl != null && imageUrl.toString().isNotEmpty)
+                          Image.network(
+                            imageUrl,
+                            fit: BoxFit.contain,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Container(
+                                color: Colors.grey[200],
+                                child: Icon(
+                                  Icons.image_not_supported,
+                                  color: Colors.grey[400],
+                                ),
+                              );
+                            },
+                          )
+                        else
+                          Container(
+                            color: Colors.grey[200],
+                            child: Icon(
+                              Icons.image_not_supported,
+                              color: Colors.grey[400],
+                            ),
+                          ),
+                        Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                Colors.transparent,
+                                Colors.black.withOpacity(0.7),
+                              ],
+                            ),
+                          ),
+                        ),
+                        Positioned(
+                          bottom: 8,
+                          left: 8,
+                          right: 8,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      post['title'] ?? '',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 4),
+                              Row(
+                                children: [
+                                  const Icon(
+                                    Icons.favorite,
+                                    color: Colors.white,
+                                    size: 12,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    '${post['likes_count'] ?? 0}',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  const Icon(
+                                    Icons.comment,
+                                    color: Colors.white,
+                                    size: 12,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    '${post['comments_count'] ?? 0}',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
   }
 
   @override

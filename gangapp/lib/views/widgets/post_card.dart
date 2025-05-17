@@ -6,10 +6,11 @@ import '../../services/api_service.dart';
 import '../../views/create_post_screen.dart';
 import 'dart:typed_data';
 import 'dart:io';
-
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import '../../controllers/profile_controller.dart';
+import 'package:provider/provider.dart';
+import '../../languages/language.dart';
 
 class PostCard extends StatefulWidget {
   final Post post;
@@ -42,14 +43,16 @@ class _PostCardState extends State<PostCard>
   late Animation<double> _animation;
 
   // Constants for styling
-  static const _primaryColor = Color(0xFF006C5F);
-  static const _secondaryColor = Color(0xFF4CAF93);
-  static final _borderRadius = BorderRadius.circular(20);
-  static final _boxShadow = BoxShadow(
-    color: Colors.black26,
+  final Color _primaryColor = const Color(0xFF006C5F);
+  final Color _secondaryColor = const Color(0xFF4CAF93);
+  final BorderRadius _borderRadius = BorderRadius.circular(20);
+  final BoxShadow _boxShadow = BoxShadow(
+    color: Colors.black.withOpacity(0.1),
     blurRadius: 10,
-    offset: Offset(0, 4),
+    offset: const Offset(0, 4),
   );
+
+  late final Language language;
 
   @override
   void initState() {
@@ -62,6 +65,7 @@ class _PostCardState extends State<PostCard>
       parent: _animationController,
       curve: Curves.easeInOut,
     );
+    language = Provider.of<Language>(context, listen: false);
   }
 
   @override
@@ -74,7 +78,7 @@ class _PostCardState extends State<PostCard>
 
   Future<void> _submitComment() async {
     if (_commentController.text.trim().isEmpty) {
-      _showSnackBar("Please write a comment", isError: true);
+      _showSnackBar(language.get('please_write_a_comment'), isError: true);
       return;
     }
 
@@ -117,9 +121,9 @@ class _PostCardState extends State<PostCard>
         });
       }
 
-      _showSnackBar("Comment posted successfully");
+      _showSnackBar(language.get('comment_posted_successfully'));
     } catch (e) {
-      _showSnackBar("Error: $e", isError: true);
+      _showSnackBar(language.get('error') + e.toString(), isError: true);
     } finally {
       if (mounted) {
         setState(() => _isSubmitting = false);
@@ -139,7 +143,7 @@ class _PostCardState extends State<PostCard>
                   : Icons.check_circle_rounded,
               color: Colors.white,
             ),
-            SizedBox(width: 8),
+            const SizedBox(width: 8),
             Flexible(
               child: Text(
                 message,
@@ -150,7 +154,7 @@ class _PostCardState extends State<PostCard>
         ),
         backgroundColor: isError ? Colors.red[400] : _primaryColor,
         behavior: SnackBarBehavior.floating,
-        margin: EdgeInsets.all(16),
+        margin: const EdgeInsets.all(16),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
     );
@@ -215,142 +219,6 @@ class _PostCardState extends State<PostCard>
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildCommentInput() {
-    return Container(
-      padding: EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(20),
-          bottomRight: Radius.circular(20),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: Offset(0, -4),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          if (_selectedImage != null || _webImage != null) ...[
-            _buildImagePreview(),
-            SizedBox(height: 16),
-          ],
-          Row(
-            children: [
-              Expanded(
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.grey[100],
-                    borderRadius: BorderRadius.circular(24),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
-                        blurRadius: 8,
-                        offset: Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          controller: _commentController,
-                          decoration: InputDecoration(
-                            hintText: 'Write a comment...',
-                            hintStyle: TextStyle(
-                              color: Colors.grey[500],
-                              fontSize: 14,
-                            ),
-                            border: InputBorder.none,
-                            contentPadding: EdgeInsets.symmetric(
-                              horizontal: 20,
-                              vertical: 14,
-                            ),
-                          ),
-                          maxLines: 1,
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.black87,
-                          ),
-                        ),
-                      ),
-                      Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(20),
-                          onTap: () async {
-                            final picked = await ImagePicker()
-                                .pickImage(source: ImageSource.gallery);
-                            if (picked != null) {
-                              if (kIsWeb) {
-                                final bytes = await picked.readAsBytes();
-                                setState(() => _webImage = bytes);
-                              } else {
-                                setState(
-                                    () => _selectedImage = File(picked.path));
-                              }
-                            }
-                          },
-                          child: Container(
-                            padding: EdgeInsets.all(10),
-                            child: Icon(
-                              Icons.photo_library_rounded,
-                              color: Colors.grey[700],
-                              size: 22,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              SizedBox(width: 12),
-              Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(20),
-                  onTap: _isSubmitting ? null : _submitComment,
-                  child: Container(
-                    padding: EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: _isSubmitting ? Colors.grey[300] : _primaryColor,
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: [
-                        BoxShadow(
-                          color: _primaryColor.withOpacity(0.3),
-                          blurRadius: 8,
-                          offset: Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: _isSubmitting
-                        ? SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              color: Colors.white,
-                              strokeWidth: 2,
-                            ),
-                          )
-                        : Icon(
-                            Icons.send_rounded,
-                            color: Colors.white,
-                            size: 20,
-                          ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
     );
   }
 
@@ -437,7 +305,8 @@ class _PostCardState extends State<PostCard>
                                                   Icon(Icons.edit_rounded,
                                                       color: Colors.grey[700]),
                                                   SizedBox(width: 8),
-                                                  Text('Edit Comment'),
+                                                  Text(language
+                                                      .get('Edit comment')),
                                                 ],
                                               ),
                                             ),
@@ -448,7 +317,9 @@ class _PostCardState extends State<PostCard>
                                                   Icon(Icons.delete_rounded,
                                                       color: Colors.red[400]),
                                                   SizedBox(width: 8),
-                                                  Text('Delete Comment',
+                                                  Text(
+                                                      language.get(
+                                                          'Delete comment'),
                                                       style: TextStyle(
                                                           color:
                                                               Colors.red[400])),
@@ -502,7 +373,7 @@ class _PostCardState extends State<PostCard>
                             icon: Icon(Icons.reply_rounded,
                                 size: 16, color: Colors.grey[600]),
                             label: Text(
-                              'Reply',
+                              language.get('reply'),
                               style: TextStyle(
                                 color: Colors.grey[600],
                                 fontSize: 12,
@@ -534,14 +405,14 @@ class _PostCardState extends State<PostCard>
     return showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Reply to ${parentComment.username}'),
+        title: Text(language.get('Reply to') + ' ' + parentComment.username),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
               controller: replyController,
               decoration: InputDecoration(
-                hintText: 'Write your reply...',
+                hintText: language.get('write_your_reply'),
                 border: OutlineInputBorder(),
               ),
               maxLines: 3,
@@ -561,19 +432,20 @@ class _PostCardState extends State<PostCard>
                 }
               },
               icon: Icon(Icons.image),
-              label: Text('Add Image'),
+              label: Text(language.get('Add Image')),
             ),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Cancel'),
+            child: Text(language.get('cancel')),
           ),
           ElevatedButton(
             onPressed: () async {
               if (replyController.text.trim().isEmpty) {
-                _showSnackBar("Please write a reply", isError: true);
+                _showSnackBar(language.get('please_write_a_reply'),
+                    isError: true);
                 return;
               }
 
@@ -604,6 +476,7 @@ class _PostCardState extends State<PostCard>
                   createdAt: DateTime.parse(response['created_at']),
                   updatedAt: DateTime.parse(response['updated_at']),
                   imageUrl: response['image_url'],
+                  parentComment: parentComment.id,
                 );
 
                 // Update the parent comment's replies list
@@ -613,16 +486,20 @@ class _PostCardState extends State<PostCard>
                       parentComment.replies = [];
                     }
                     parentComment.replies!.add(newReply);
+                    // Sort replies by creation date
+                    parentComment.replies!
+                        .sort((a, b) => a.createdAt.compareTo(b.createdAt));
                   });
                 }
 
                 Navigator.pop(context);
-                _showSnackBar("Reply posted successfully");
+                _showSnackBar(language.get('reply_posted_successfully'));
               } catch (e) {
-                _showSnackBar("Error: $e", isError: true);
+                _showSnackBar(language.get('error') + e.toString(),
+                    isError: true);
               }
             },
-            child: Text('Post Reply'),
+            child: Text(language.get('Post Reply')),
           ),
         ],
       ),
@@ -637,10 +514,16 @@ class _PostCardState extends State<PostCard>
         final isCurrentUser = currentUsername == reply.username;
 
         return Container(
-          margin: EdgeInsets.only(left: 30, bottom: 8),
+          margin: EdgeInsets.only(left: 40, bottom: 8),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Container(
+                width: 2,
+                height: 40,
+                color: Colors.grey[300],
+                margin: EdgeInsets.only(right: 12),
+              ),
               _buildAvatar(reply.username, isReply: true),
               SizedBox(width: 8),
               Expanded(
@@ -667,7 +550,7 @@ class _PostCardState extends State<PostCard>
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Flexible(
+                          Expanded(
                             child: Text(
                               reply.username,
                               style: TextStyle(
@@ -704,7 +587,7 @@ class _PostCardState extends State<PostCard>
                                           Icon(Icons.edit_rounded,
                                               color: Colors.grey[700]),
                                           SizedBox(width: 8),
-                                          Text('Edit Reply'),
+                                          Text(language.get('Edit reply')),
                                         ],
                                       ),
                                     ),
@@ -715,9 +598,11 @@ class _PostCardState extends State<PostCard>
                                           Icon(Icons.delete_rounded,
                                               color: Colors.red[400]),
                                           SizedBox(width: 8),
-                                          Text('Delete Reply',
-                                              style: TextStyle(
-                                                  color: Colors.red[400])),
+                                          Text(
+                                            language.get('Delete reply'),
+                                            style: TextStyle(
+                                                color: Colors.red[400]),
+                                          ),
                                         ],
                                       ),
                                     ),
@@ -781,7 +666,7 @@ class _PostCardState extends State<PostCard>
       _profileImageCache[username] = profileImage;
       return profileImage;
     } catch (e) {
-      print('Error fetching profile image: $e');
+      print(language.get('error_fetching_profile_image') + e.toString());
       return null;
     }
   }
@@ -853,39 +738,33 @@ class _PostCardState extends State<PostCard>
   }
 
   Widget _buildPostHeader() {
-    return Padding(
-      padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: _borderRadius.topLeft),
+      ),
       child: Row(
         children: [
           _buildAvatar(widget.post.username, isReply: false),
-          SizedBox(width: 12),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   widget.post.username,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
                   ),
                 ),
-                Row(
-                  children: [
-                    Icon(
-                      Icons.access_time_rounded,
-                      size: 14,
-                      color: Colors.grey[500],
-                    ),
-                    SizedBox(width: 4),
-                    Text(
-                      _formatDate(widget.post.createdAt),
-                      style: TextStyle(
-                        color: Colors.grey[600],
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
+                Text(
+                  _formatDate(widget.post.createdAt),
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 12,
+                  ),
                 ),
               ],
             ),
@@ -1018,7 +897,7 @@ class _PostCardState extends State<PostCard>
                     children: [
                       Icon(Icons.edit_rounded, color: Colors.grey[700]),
                       SizedBox(width: 8),
-                      Text('Update Post'),
+                      Text(language.get('Update post')),
                     ],
                   ),
                 ),
@@ -1028,7 +907,7 @@ class _PostCardState extends State<PostCard>
                     children: [
                       Icon(Icons.archive_rounded, color: Colors.grey[700]),
                       SizedBox(width: 8),
-                      Text('Archive Post'),
+                      Text(language.get('Archive post')),
                     ],
                   ),
                 ),
@@ -1038,7 +917,7 @@ class _PostCardState extends State<PostCard>
                     children: [
                       Icon(Icons.delete_rounded, color: Colors.red[400]),
                       SizedBox(width: 8),
-                      Text('Delete Post',
+                      Text(language.get('Delete post'),
                           style: TextStyle(color: Colors.red[400])),
                     ],
                   ),
@@ -1077,14 +956,14 @@ class _PostCardState extends State<PostCard>
       decoration: BoxDecoration(
         color: Colors.grey[50],
         borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(20),
-          bottomRight: Radius.circular(20),
+          bottomLeft: _borderRadius.bottomLeft,
+          bottomRight: _borderRadius.bottomRight,
         ),
       ),
       child: Column(
         children: [
           Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -1095,24 +974,25 @@ class _PostCardState extends State<PostCard>
                       size: 20,
                       color: _primaryColor,
                     ),
-                    SizedBox(width: 8),
+                    const SizedBox(width: 8),
                     Text(
-                      'Comments',
-                      style: TextStyle(
+                      language.get('Comments'),
+                      style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
                         color: Colors.black87,
                       ),
                     ),
-                    SizedBox(width: 8),
+                    const SizedBox(width: 8),
                     Container(
-                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         color: _primaryColor.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(
-                        '${widget.post.comments.length}',
+                        '${_getTotalCommentCount()}',
                         style: TextStyle(
                           color: _primaryColor,
                           fontWeight: FontWeight.bold,
@@ -1128,22 +1008,21 @@ class _PostCardState extends State<PostCard>
                     borderRadius: BorderRadius.circular(20),
                     onTap: () {
                       setState(() {
-                        _isCommentsVisible = !_isCommentsVisible;
                         if (_isCommentsVisible) {
-                          _animationController.forward();
-                        } else {
                           _animationController.reverse();
+                        } else {
+                          _animationController.forward();
                         }
+                        _isCommentsVisible = !_isCommentsVisible;
                       });
                     },
                     child: Padding(
-                      padding: EdgeInsets.all(8),
-                      child: RotationTransition(
-                        turns: Tween(begin: 0.0, end: 0.5).animate(_animation),
-                        child: Icon(
-                          Icons.keyboard_arrow_down_rounded,
-                          color: Colors.grey[700],
-                        ),
+                      padding: const EdgeInsets.all(8),
+                      child: Icon(
+                        _isCommentsVisible
+                            ? Icons.keyboard_arrow_up_rounded
+                            : Icons.keyboard_arrow_down_rounded,
+                        color: Colors.grey[700],
                       ),
                     ),
                   ),
@@ -1157,7 +1036,7 @@ class _PostCardState extends State<PostCard>
               children: [
                 if (widget.post.comments.isNotEmpty)
                   Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16),
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: Column(
                       children: widget.post.comments
                           .map((comment) => _buildCommentItem(comment))
@@ -1173,55 +1052,173 @@ class _PostCardState extends State<PostCard>
     );
   }
 
-  Future<void> _showDeleteConfirmationDialog() async {
-    return showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Row(
-          children: [
-            Icon(Icons.warning_amber_rounded, color: Colors.orange[700]),
-            SizedBox(width: 8),
-            Text('Delete Post'),
-          ],
+  Widget _buildCommentInput() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.only(
+          bottomLeft: Radius.circular(20),
+          bottomRight: Radius.circular(20),
         ),
-        content: Text(
-            'Are you sure you want to delete this post? This action cannot be undone.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('Cancel', style: TextStyle(color: Colors.grey[700])),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, -4),
           ),
-          ElevatedButton(
-            onPressed: () async {
-              try {
-                await _postService.deletePost(widget.post.id);
-                Navigator.pop(context);
-                _showSnackBar('Post deleted successfully');
-              } catch (e) {
-                Navigator.pop(context);
-                _showSnackBar('Failed to delete post: $e', isError: true);
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red[400],
-              foregroundColor: Colors.white,
-            ),
-            child: Text('Delete'),
+        ],
+      ),
+      child: Column(
+        children: [
+          if (_selectedImage != null || _webImage != null) ...[
+            _buildImagePreview(),
+            const SizedBox(height: 16),
+          ],
+          Row(
+            children: [
+              Expanded(
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.grey[100],
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: _commentController,
+                          decoration: InputDecoration(
+                            hintText: language.get('write_a_comment'),
+                            hintStyle: TextStyle(
+                              color: Colors.grey[500],
+                              fontSize: 14,
+                            ),
+                            border: InputBorder.none,
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 14,
+                            ),
+                          ),
+                          maxLines: 1,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: Colors.black87,
+                          ),
+                        ),
+                      ),
+                      Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(20),
+                          onTap: () async {
+                            final picked = await ImagePicker()
+                                .pickImage(source: ImageSource.gallery);
+                            if (picked != null) {
+                              if (kIsWeb) {
+                                final bytes = await picked.readAsBytes();
+                                setState(() => _webImage = bytes);
+                              } else {
+                                setState(
+                                    () => _selectedImage = File(picked.path));
+                              }
+                            }
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.all(10),
+                            child: Icon(
+                              Icons.photo_library_rounded,
+                              color: Colors.grey[700],
+                              size: 22,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(20),
+                  onTap: _isSubmitting ? null : _submitComment,
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: _isSubmitting ? Colors.grey[300] : _primaryColor,
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: _primaryColor.withOpacity(0.3),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: _isSubmitting
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : const Icon(
+                            Icons.send_rounded,
+                            color: Colors.white,
+                            size: 20,
+                          ),
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),
     );
   }
 
-  Future<void> _handleArchivePost() async {
-    try {
-      await _postService.archivePost(widget.post.id);
+  Future<void> _showDeleteConfirmationDialog() async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(language.get('delete_post')),
+        content: Text(language.get('delete_confirmation')),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(language.get('no')),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(language.get('yes')),
+          ),
+        ],
+      ),
+    );
+
+    if (result == true) {
+      // Handle post deletion
       if (widget.onPostArchived != null) {
         widget.onPostArchived!();
       }
-      _showSnackBar('Post archived successfully');
-    } catch (e) {
-      _showSnackBar('Failed to archive post: $e', isError: true);
+    }
+  }
+
+  Future<void> _handleArchivePost() async {
+    // Handle post archiving
+    if (widget.onPostArchived != null) {
+      widget.onPostArchived!();
     }
   }
 
@@ -1233,15 +1230,15 @@ class _PostCardState extends State<PostCard>
           children: [
             Icon(Icons.warning_amber_rounded, color: Colors.orange[700]),
             SizedBox(width: 8),
-            Text('Delete Comment'),
+            Text(language.get('Delete comment')),
           ],
         ),
-        content: Text(
-            'Are you sure you want to delete this comment? This action cannot be undone.'),
+        content: Text(language.get('delete_comment_confirmation')),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Cancel', style: TextStyle(color: Colors.grey[700])),
+            child: Text(language.get('cancel'),
+                style: TextStyle(color: Colors.grey[700])),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -1264,12 +1261,13 @@ class _PostCardState extends State<PostCard>
                   if (widget.onPostArchived != null) {
                     widget.onPostArchived!();
                   }
-                  _showSnackBar('Comment deleted successfully');
+                  _showSnackBar(language.get('Comment_deleted_successfully'));
                 }
               } catch (e) {
                 if (mounted) {
                   Navigator.pop(context);
-                  _showSnackBar('Failed to delete comment: $e', isError: true);
+                  _showSnackBar(language.get('error') + e.toString(),
+                      isError: true);
                 }
               }
             },
@@ -1277,7 +1275,7 @@ class _PostCardState extends State<PostCard>
               backgroundColor: Colors.red[400],
               foregroundColor: Colors.white,
             ),
-            child: Text('Delete'),
+            child: Text(language.get('delete')),
           ),
         ],
       ),
@@ -1293,14 +1291,14 @@ class _PostCardState extends State<PostCard>
     return showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Edit Comment'),
+        title: Text(language.get('Edit comment')),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
               controller: contentController,
               decoration: InputDecoration(
-                hintText: 'Edit your comment...',
+                hintText: language.get('edit_comment_hint'),
                 border: OutlineInputBorder(),
               ),
               maxLines: 3,
@@ -1320,14 +1318,14 @@ class _PostCardState extends State<PostCard>
                 }
               },
               icon: Icon(Icons.image),
-              label: Text('Change Image'),
+              label: Text(language.get('change_image')),
             ),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Cancel'),
+            child: Text(language.get('cancel')),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -1346,16 +1344,17 @@ class _PostCardState extends State<PostCard>
                   );
                 }
                 Navigator.pop(context);
-                _showSnackBar('Comment updated successfully');
+                _showSnackBar(language.get('comment_updated_successfully'));
                 if (widget.onPostArchived != null) {
                   widget.onPostArchived!();
                 }
               } catch (e) {
                 Navigator.pop(context);
-                _showSnackBar('Failed to update comment: $e', isError: true);
+                _showSnackBar(language.get('error') + e.toString(),
+                    isError: true);
               }
             },
-            child: Text('Save'),
+            child: Text(language.get('save')),
           ),
         ],
       ),
@@ -1375,5 +1374,15 @@ class _PostCardState extends State<PostCard>
     } else {
       return 'Just now';
     }
+  }
+
+  int _getTotalCommentCount() {
+    int count = widget.post.comments.length;
+    for (final comment in widget.post.comments) {
+      if (comment.replies != null) {
+        count += comment.replies!.length;
+      }
+    }
+    return count;
   }
 }
