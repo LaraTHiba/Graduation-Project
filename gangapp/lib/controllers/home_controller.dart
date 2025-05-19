@@ -54,10 +54,17 @@ class HomeController {
       throw Exception("Content cannot be empty");
     }
 
+    // Get the first valid interest ID
+    final interests = await _apiService.getInterests();
+    if (interests.isEmpty) {
+      throw Exception("No valid interests found");
+    }
+    final interestId = interests[0]['id'];
+
     await _postService.createPost(
       title: title,
       content: content,
-      interest: 1, // TODO: Make this configurable
+      interest: interestId,
       image: image,
     );
   }

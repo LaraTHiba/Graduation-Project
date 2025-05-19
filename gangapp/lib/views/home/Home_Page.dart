@@ -93,12 +93,12 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  Future<void> _createPost(Post post) async {
+  Future<void> _createPost(Post post, {dynamic image}) async {
     try {
       await _homeController.createPost(
         title: post.title,
         content: post.content,
-        image: post.imageUrl,
+        image: image,
       );
       await _refreshPosts();
     } catch (e) {

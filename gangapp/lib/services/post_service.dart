@@ -1,4 +1,5 @@
 import 'dart:typed_data';
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 
 import '../utils/platform_utils.dart';
@@ -54,7 +55,14 @@ class PostService {
     required int interest,
     dynamic image,
   }) async {
-    _validateImageType(image);
+    if (image != null) {
+      if (kIsWeb && !(image is Uint8List)) {
+        throw Exception("For web, image must be Uint8List");
+      }
+      if (!kIsWeb && !(image is File)) {
+        throw Exception("For mobile, image must be File");
+      }
+    }
 
     return kIsWeb
         ? _apiService.createPostWeb(

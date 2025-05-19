@@ -1208,9 +1208,18 @@ class _PostCardState extends State<PostCard>
     );
 
     if (result == true) {
-      // Handle post deletion
-      if (widget.onPostArchived != null) {
-        widget.onPostArchived!();
+      try {
+        await _postService.deletePost(widget.post.id);
+        if (mounted) {
+          if (widget.onPostArchived != null) {
+            widget.onPostArchived!();
+          }
+          _showSnackBar(language.get('Post_deleted_successfully'));
+        }
+      } catch (e) {
+        if (mounted) {
+          _showSnackBar(language.get('error') + e.toString(), isError: true);
+        }
       }
     }
   }

@@ -629,13 +629,13 @@ class ApiService {
 
       // Send the request
       try {
-      var streamedResponse = await request.send();
-      var response = await http.Response.fromStream(streamedResponse);
+        var streamedResponse = await request.send();
+        var response = await http.Response.fromStream(streamedResponse);
 
-      if (response.statusCode == 201) {
-        return jsonDecode(response.body);
-      } else {
-        throw Exception('Failed to create post: ${response.body}');
+        if (response.statusCode == 201) {
+          return jsonDecode(response.body);
+        } else {
+          throw Exception('Failed to create post: ${response.body}');
         }
       } catch (e) {
         throw Exception('Error sending request: $e');
@@ -714,13 +714,18 @@ class ApiService {
     }
   }
 
-  // Create post for web platforms
+  // Create post (web version)
   Future<Map<String, dynamic>> createPostWeb({
     required String title,
     required String content,
     required int interest,
     Uint8List? imageBytes,
   }) async {
+    if (!kIsWeb) {
+      throw Exception(
+          "For mobile, use createPost instead. Uint8List is not supported on mobile.");
+    }
+
     return _handleTokenRefresh(() async {
       final token = await getAuthToken();
 
@@ -728,9 +733,11 @@ class ApiService {
         throw Exception("Title, content, and interest are required.");
       }
 
-      // Use standard http request instead of MultipartRequest for better control
-      final Uri uri = Uri.parse(postsEndpoint);
-      final request = http.MultipartRequest('POST', uri);
+      // For new implementation using multipart form
+      var request = http.MultipartRequest(
+        'POST',
+        Uri.parse(postsEndpoint),
+      );
 
       // Add headers
       request.headers.addAll({
@@ -740,9 +747,7 @@ class ApiService {
       // Add text fields
       request.fields['title'] = title;
       request.fields['content'] = content;
-      if (interest != null) {
-        request.fields['interest'] = interest.toString();
-      }
+      request.fields['interest'] = interest.toString();
 
       // Add image if selected
       if (imageBytes != null) {
@@ -751,28 +756,16 @@ class ApiService {
           final timestamp = DateTime.now().millisecondsSinceEpoch;
           final filename = 'post_image_${timestamp}.jpg';
 
-          // Try multiple field names that Django might be looking for
+          // Add original_filename field
           request.fields['original_filename'] = filename;
-          request.fields['name'] = filename;
-          request.fields['file_name'] = filename;
-          request.fields['image_name'] = filename;
-          request.fields['image_original_name'] = filename;
-          request.fields['image_filename'] = filename;
 
-          // Create the multipart file with explicit filename
-          final multipartFile = http.MultipartFile.fromBytes(
+          // Create multipart file from bytes
+          request.files.add(http.MultipartFile.fromBytes(
             'image',
             imageBytes,
             filename: filename,
             contentType: MediaType('image', 'jpeg'),
-          );
-
-          request.files.add(multipartFile);
-
-          // Add debugging information
-          print('Uploading file with filename: $filename');
-          print('Content-Type: ${multipartFile.contentType}');
-          print('Field name: ${multipartFile.field}');
+          ));
         } catch (e) {
           throw Exception('Failed to upload image: $e');
         }
@@ -780,18 +773,11 @@ class ApiService {
 
       // Send the request
       try {
-        print('Sending request to $uri');
-        final streamedResponse = await request.send();
-        final response = await http.Response.fromStream(streamedResponse);
-
-        // Debug response
-        print('Response status code: ${response.statusCode}');
-        print('Response headers: ${response.headers}');
+        var streamedResponse = await request.send();
+        var response = await http.Response.fromStream(streamedResponse);
 
         if (response.statusCode == 201) {
-          final responseData = jsonDecode(response.body);
-          print('Image URL in response: ${responseData['image']}');
-          return responseData;
+          return jsonDecode(response.body);
         } else {
           throw Exception('Failed to create post: ${response.body}');
         }

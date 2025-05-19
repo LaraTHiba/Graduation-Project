@@ -10,7 +10,7 @@ import '../../models/post.dart';
 /// Dialog widget for creating new posts
 class CreatePostDialog extends StatefulWidget {
   /// Callback function when a post is created
-  final Function(Post) onPostCreated;
+  final Function(Post, {dynamic image}) onPostCreated;
   final Post? postToEdit;
 
   const CreatePostDialog({
@@ -27,7 +27,9 @@ class _CreatePostDialogState extends State<CreatePostDialog> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _contentController = TextEditingController();
-  String? _imageUrl;
+  final ImagePicker _picker = ImagePicker();
+  File? _selectedImage;
+  Uint8List? _webImage;
   bool _isLoading = false;
 
   @override
@@ -36,7 +38,9 @@ class _CreatePostDialogState extends State<CreatePostDialog> {
     if (widget.postToEdit != null) {
       _titleController.text = widget.postToEdit!.title;
       _contentController.text = widget.postToEdit!.content;
-      _imageUrl = widget.postToEdit!.imageUrl;
+      if (widget.postToEdit!.imageUrl != null) {
+        // Handle existing image
+      }
     }
   }
 
@@ -48,7 +52,93 @@ class _CreatePostDialogState extends State<CreatePostDialog> {
   }
 
   Future<void> _handleImageUpload() async {
-    // Implement image upload logic here
+    try {
+      final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+      if (image != null) {
+        if (kIsWeb) {
+          // For web, convert the image to Uint8List
+          final bytes = await image.readAsBytes();
+          setState(() {
+            _webImage = bytes;
+            _selectedImage = null; // Clear mobile image
+          });
+        } else {
+          // For mobile, use File
+          setState(() {
+            _selectedImage = File(image.path);
+            _webImage = null; // Clear web image
+          });
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to pick image: $e')),
+        );
+      }
+    }
+  }
+
+  Widget _buildImagePreview() {
+    if (_selectedImage == null && _webImage == null) return SizedBox.shrink();
+
+    return Stack(
+      children: [
+        Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 8,
+                offset: Offset(0, 4),
+              ),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(16),
+            child: kIsWeb
+                ? Image.memory(
+                    _webImage!,
+                    fit: BoxFit.cover,
+                    height: 200,
+                    width: double.infinity,
+                  )
+                : Image.file(
+                    _selectedImage!,
+                    fit: BoxFit.cover,
+                    height: 200,
+                    width: double.infinity,
+                  ),
+          ),
+        ),
+        Positioned(
+          top: 8,
+          right: 8,
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () => setState(() {
+                if (kIsWeb) {
+                  _webImage = null;
+                } else {
+                  _selectedImage = null;
+                }
+              }),
+              borderRadius: BorderRadius.circular(20),
+              child: Container(
+                padding: EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.black.withOpacity(0.6),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(Icons.close_rounded, color: Colors.white, size: 20),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
   }
 
   void _showSnackBar(String message, {bool isError = false}) {
@@ -87,11 +177,12 @@ class _CreatePostDialogState extends State<CreatePostDialog> {
     setState(() => _isLoading = true);
 
     try {
+      // Create the post with the image data
       final post = Post(
         id: widget.postToEdit?.id ?? 0,
         title: _titleController.text,
         content: _contentController.text,
-        imageUrl: _imageUrl,
+        imageUrl: null, // Will be set after upload
         username: 'Current User', // Replace with actual username
         createdAt: DateTime.now(),
         comments: widget.postToEdit?.comments ?? [],
@@ -100,7 +191,10 @@ class _CreatePostDialogState extends State<CreatePostDialog> {
         updatedAt: DateTime.now(),
       );
 
-      widget.onPostCreated(post);
+      // Call onPostCreated with the image data
+      final image = kIsWeb ? _webImage : _selectedImage;
+      widget.onPostCreated(post, image: image);
+
       Navigator.pop(context);
       _showSnackBar(
         widget.postToEdit != null
@@ -176,70 +270,39 @@ class _CreatePostDialogState extends State<CreatePostDialog> {
                 },
               ),
               const SizedBox(height: 16),
-              if (_imageUrl != null)
-                Stack(
-                  children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(10),
-                      child: Image.network(
-                        _imageUrl!,
-                        height: 200,
-                        width: double.infinity,
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                    Positioned(
-                      top: 8,
-                      right: 8,
-                      child: IconButton(
-                        icon: const Icon(Icons.close, color: Colors.white),
-                        onPressed: () => setState(() => _imageUrl = null),
-                      ),
-                    ),
-                  ],
+              if (_selectedImage != null || _webImage != null) ...[
+                _buildImagePreview(),
+                const SizedBox(height: 16),
+              ],
+              OutlinedButton.icon(
+                onPressed: _handleImageUpload,
+                icon: const Icon(Icons.image_rounded),
+                label: Text(language.get('Add image')),
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
                 ),
+              ),
               const SizedBox(height: 16),
               Row(
                 children: [
                   Expanded(
                     child: OutlinedButton.icon(
-                      onPressed: _handleImageUpload,
-                      icon: const Icon(Icons.image_rounded),
-                      label: Text(language.get('Add image')),
+                      onPressed: _handleSubmit,
+                      icon: const Icon(Icons.post_add_rounded),
+                      label: Text(
+                        isEditing
+                            ? language.get('Edit post')
+                            : language.get('Post'),
+                      ),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),
                       ),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: _isLoading ? null : _handleSubmit,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF006C5F),
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                      child: _isLoading
-                          ? const SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor:
-                                    AlwaysStoppedAnimation<Color>(Colors.white),
-                              ),
-                            )
-                          : Text(
-                              isEditing
-                                  ? language.get('Edit post')
-                                  : language.get('Post'),
-                            ),
                     ),
                   ),
                 ],

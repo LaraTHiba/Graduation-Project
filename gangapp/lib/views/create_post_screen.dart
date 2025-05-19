@@ -57,14 +57,14 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
 
       if (image != null) {
         if (kIsWeb) {
-          // For web platform
+          // For web, convert the image to Uint8List
           final bytes = await image.readAsBytes();
           setState(() {
             _webImage = bytes;
             _selectedImage = null; // Clear mobile image
           });
         } else {
-          // For mobile platforms
+          // For mobile, use File
           setState(() {
             _selectedImage = File(image.path);
             _webImage = null; // Clear web image
@@ -72,9 +72,11 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
         }
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error picking image: $e')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to pick image: $e')),
+        );
+      }
     }
   }
 
@@ -186,16 +188,52 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
               ),
               const SizedBox(height: 16),
               ElevatedButton.icon(
-                onPressed: _isLoading ? null : _pickImage,
+                onPressed: () {
+                  print('Image button pressed');
+                  _pickImage();
+                },
                 icon: const Icon(Icons.image),
                 label: const Text('Pick Image'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Theme.of(context).primaryColor,
+                  foregroundColor: Colors.white,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                ),
               ),
               if (_selectedImage != null || _webImage != null)
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8.0),
-                  child: Text(
-                    'Image selected',
-                    style: TextStyle(color: Theme.of(context).primaryColor),
+                Container(
+                  margin: const EdgeInsets.symmetric(vertical: 8.0),
+                  child: Stack(
+                    children: [
+                      if (kIsWeb)
+                        Image.memory(
+                          _webImage!,
+                          width: 200,
+                          height: 200,
+                          fit: BoxFit.cover,
+                        )
+                      else
+                        Image.file(
+                          _selectedImage as File,
+                          width: 200,
+                          height: 200,
+                          fit: BoxFit.cover,
+                        ),
+                      Positioned(
+                        right: 0,
+                        top: 0,
+                        child: IconButton(
+                          icon: const Icon(Icons.close),
+                          onPressed: () {
+                            setState(() {
+                              _selectedImage = null;
+                              _webImage = null;
+                            });
+                          },
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               const SizedBox(height: 16),
