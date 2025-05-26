@@ -16,6 +16,7 @@ import '../widgets/profile_icon.dart';
 import 'dart:ui';
 import 'package:provider/provider.dart';
 import '../../languages/language.dart';
+import 'package:file_picker/file_picker.dart';
 
 class ProfilePage extends StatefulWidget {
   final String? username;
@@ -62,6 +63,10 @@ class _ProfilePageState extends State<ProfilePage> {
 
   String? _userType;
   String? _userEmail;
+
+  File? _cvFile;
+  Uint8List? _cvFileWeb;
+  String? _cvFileName;
 
   @override
   void initState() {
@@ -407,11 +412,40 @@ class _ProfilePageState extends State<ProfilePage> {
                             const Divider(),
                             if (!isCompanyUser)
                               ListTile(
-                                leading: const Icon(Icons.upload_file),
+                                leading: Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: _primaryColor.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Icon(
+                                    Icons.upload_file_rounded,
+                                    color: _primaryColor,
+                                  ),
+                                ),
                                 title: Text(language.get('Add CV')),
-                                onTap: () {
-                                  // TODO: Implement CV upload
-                                },
+                                subtitle: _cvFileName != null
+                                    ? Text(
+                                        _cvFileName!,
+                                        style: TextStyle(
+                                          color: Colors.grey[600],
+                                          fontSize: 14,
+                                        ),
+                                      )
+                                    : null,
+                                trailing: _cvFileName != null
+                                    ? IconButton(
+                                        icon: const Icon(Icons.close),
+                                        onPressed: () {
+                                          setState(() {
+                                            _cvFile = null;
+                                            _cvFileWeb = null;
+                                            _cvFileName = null;
+                                          });
+                                        },
+                                      )
+                                    : null,
+                                onTap: _showCVUploadDialog,
                               ),
                             const Divider(),
                             ListTile(
@@ -1091,6 +1125,156 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
           );
         },
+      ),
+    );
+  }
+
+  Future<void> _pickCV() async {
+    try {
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['pdf', 'doc', 'docx'],
+        allowMultiple: false,
+      );
+
+      if (result != null) {
+        if (kIsWeb) {
+          setState(() {
+            _cvFileWeb = result.files.single.bytes;
+            _cvFileName = result.files.single.name;
+          });
+        } else {
+          setState(() {
+            _cvFile = File(result.files.single.path!);
+            _cvFileName = result.files.single.name;
+          });
+        }
+      }
+    } catch (e) {
+      _showErrorDialog('CV Upload Error', e.toString());
+    }
+  }
+
+  void _showCVUploadDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: _primaryColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Icon(
+                  Icons.upload_file_rounded,
+                  size: 48,
+                  color: _primaryColor,
+                ),
+              ),
+              const SizedBox(height: 24),
+              Text(
+                'Upload Your CV',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: _primaryColor,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Supported formats: PDF, DOC, DOCX',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.grey[600],
+                ),
+              ),
+              const SizedBox(height: 24),
+              if (_cvFileName != null) ...[
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[100],
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.description,
+                        color: _primaryColor,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          _cvFileName!,
+                          style: const TextStyle(
+                            fontSize: 16,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close),
+                        onPressed: () {
+                          setState(() {
+                            _cvFile = null;
+                            _cvFileWeb = null;
+                            _cvFileName = null;
+                          });
+                          Navigator.pop(context);
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: Text(
+                      'Cancel',
+                      style: TextStyle(
+                        color: Colors.grey[600],
+                        fontSize: 16,
+                      ),
+                    ),
+                  ),
+                  ElevatedButton(
+                    onPressed: () {
+                      _pickCV();
+                      Navigator.pop(context);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: _primaryColor,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 12,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text(
+                      'Choose File',
+                      style: TextStyle(fontSize: 16),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
