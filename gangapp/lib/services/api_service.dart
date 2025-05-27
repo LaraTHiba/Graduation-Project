@@ -289,6 +289,7 @@ class ApiService {
     required String dateOfBirth,
     dynamic profilePicture,
     dynamic backgroundImage,
+    dynamic cvFile,
   }) async {
     if (kIsWeb) {
       throw Exception(
@@ -357,6 +358,28 @@ class ApiService {
       ));
     }
 
+    // Add CV file if selected
+    if (cvFile != null) {
+      // Extract the filename from the path
+      String filepath = cvFile.path;
+      String filename = filepath.split('/').last;
+
+      // If we can't get a filename, generate one with timestamp
+      if (filename.isEmpty) {
+        final timestamp = DateTime.now().millisecondsSinceEpoch;
+        filename = 'cv_${timestamp}.pdf';
+      }
+
+      // Add original_filename field
+      request.fields['cv_original_filename'] = filename;
+
+      request.files.add(await http.MultipartFile.fromPath(
+        'cv_file',
+        cvFile.path,
+        filename: filename,
+      ));
+    }
+
     // Send the request
     var streamedResponse = await request.send();
     var response = await http.Response.fromStream(streamedResponse);
@@ -376,6 +399,7 @@ class ApiService {
     required String dateOfBirth,
     Uint8List? profilePictureWeb,
     Uint8List? backgroundImageWeb,
+    Uint8List? cvFileWeb,
   }) async {
     final token = await getAuthToken();
 
@@ -420,6 +444,20 @@ class ApiService {
         backgroundImageWeb,
         filename: filename,
         contentType: MediaType('image', 'jpeg'),
+      ));
+    }
+
+    // Add CV file if selected
+    if (cvFileWeb != null) {
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final filename = 'cv_${timestamp}.pdf';
+      request.fields['cv_original_filename'] = filename;
+
+      request.files.add(http.MultipartFile.fromBytes(
+        'cv_file',
+        cvFileWeb,
+        filename: filename,
+        contentType: MediaType('application', 'pdf'),
       ));
     }
 
@@ -1245,7 +1283,8 @@ class ApiService {
   }
 
   // Upload a file and get back a URL (mobile version)
-  Future<Map<String, dynamic>> uploadFile(dynamic file) async {
+  Future<Map<String, dynamic>> uploadFile(dynamic file,
+      {String? fileType}) async {
     if (kIsWeb) {
       throw Exception(
           'This method should not be called on web platforms. Use uploadFileWeb instead.');
@@ -1276,6 +1315,11 @@ class ApiService {
     // Add original_filename field
     request.fields['original_filename'] = filename;
 
+    // Add file_type field if provided
+    if (fileType != null) {
+      request.fields['file_type'] = fileType;
+    }
+
     // Add file
     request.files.add(await http.MultipartFile.fromPath(
       'file',
@@ -1296,7 +1340,8 @@ class ApiService {
 
   // Upload a file and get back a URL (web version)
   Future<Map<String, dynamic>> uploadFileWeb(
-      Uint8List? fileBytes, String fileName, String contentType) async {
+      Uint8List? fileBytes, String fileName, String contentType,
+      {String? fileType}) async {
     final token = await getAuthToken();
 
     if (fileBytes == null) {
@@ -1315,6 +1360,11 @@ class ApiService {
 
     // Add original_filename field
     request.fields['original_filename'] = fileName;
+
+    // Add file_type field if provided
+    if (fileType != null) {
+      request.fields['file_type'] = fileType;
+    }
 
     // Parse content type safely
     MediaType mediaType;

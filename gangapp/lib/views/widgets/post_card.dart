@@ -11,6 +11,8 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import '../../controllers/profile_controller.dart';
 import 'package:provider/provider.dart';
 import '../../languages/language.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class PostCard extends StatefulWidget {
   final Post post;
@@ -664,6 +666,7 @@ class _PostCardState extends State<PostCard>
       final profileImage = profile['profile_picture'];
       // Cache the profile image
       _profileImageCache[username] = profileImage;
+      print(_profileImageCache);
       return profileImage;
     } catch (e) {
       print(language.get('error_fetching_profile_image') + e.toString());
@@ -1394,4 +1397,46 @@ class _PostCardState extends State<PostCard>
     }
     return count;
   }
+}
+
+Widget buildCVCornerIcon(Map<String, dynamic> userDetails) {
+  final cvUrl = userDetails['cv_url'];
+  final cvFileName = userDetails['cv_original_filename'] ?? 'CV';
+
+  if (cvUrl == null) return SizedBox.shrink();
+
+  return Positioned(
+    top: 20,
+    right: 20,
+    child: GestureDetector(
+      onTap: () async {
+        final uri = Uri.parse(cvUrl);
+        if (await canLaunchUrl(uri)) {
+          await launchUrl(uri, mode: LaunchMode.externalApplication);
+        }
+      },
+      child: Tooltip(
+        message: 'View CV: $cvFileName',
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.15),
+                blurRadius: 8,
+                offset: Offset(0, 2),
+              ),
+            ],
+          ),
+          padding: EdgeInsets.all(10),
+          child: Icon(
+            Icons.description_rounded,
+            color: Color(0xFF006C5F),
+            size: 36,
+          ),
+        ),
+      ),
+    ),
+  );
 }

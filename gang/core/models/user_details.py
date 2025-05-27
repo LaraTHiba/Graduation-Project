@@ -11,6 +11,7 @@ class UserDetails(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='details')
     full_name = models.CharField(max_length=200, blank=True, null=True)
     profile_picture = models.ImageField(upload_to=get_upload_path, blank=True, null=True)
+    cv_file = models.FileField(upload_to=get_upload_path, blank=True, null=True, help_text='Upload your CV (PDF, DOC, DOCX)')
     bio = models.TextField(blank=True, null=True)
     location = models.CharField(max_length=100, blank=True, null=True)
     date_of_birth = models.DateTimeField(null=True, blank=True)
@@ -39,4 +40,10 @@ class UserDetails(models.Model):
     def background_image_url(self):
         if self.background_image:
             return f"{settings.MEDIA_URL}{self.background_image}"
+        return None
+
+    @property
+    def cv_file_url(self):
+        if self.cv_file:
+            return f"{settings.MEDIA_URL}{self.cv_file}"
         return None 

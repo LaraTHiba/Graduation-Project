@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/foundation.dart';
 
 /// Controller class for handling authentication-related operations
-class AuthController {
+class AuthController extends ChangeNotifier {
   final ApiService _apiService = ApiService();
 
   /// Attempts to log in a user with the provided credentials

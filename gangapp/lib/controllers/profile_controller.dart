@@ -67,6 +67,8 @@ class ProfileController {
   /// [backgroundImage] Background image file (mobile only)
   /// [profilePictureWeb] Profile picture bytes (web only)
   /// [backgroundImageWeb] Background image bytes (web only)
+  /// [cvFile] CV file (mobile only)
+  /// [cvFileWeb] CV file bytes (web only)
   Future<Map<String, dynamic>> updateProfile({
     required String fullName,
     required String bio,
@@ -76,6 +78,8 @@ class ProfileController {
     File? backgroundImage,
     Uint8List? profilePictureWeb,
     Uint8List? backgroundImageWeb,
+    File? cvFile,
+    Uint8List? cvFileWeb,
   }) async {
     try {
       if (kIsWeb) {
@@ -86,6 +90,7 @@ class ProfileController {
           dateOfBirth: dateOfBirth,
           profilePictureWeb: profilePictureWeb,
           backgroundImageWeb: backgroundImageWeb,
+          cvFileWeb: cvFileWeb,
         );
       }
 
@@ -96,9 +101,38 @@ class ProfileController {
         dateOfBirth: dateOfBirth,
         profilePicture: profilePicture,
         backgroundImage: backgroundImage,
+        cvFile: cvFile,
       );
     } catch (e) {
       throw Exception('Failed to update profile: $e');
+    }
+  }
+
+  /// Uploads a CV file to the user's profile
+  Future<Map<String, dynamic>> uploadCV({
+    File? cvFile,
+    Uint8List? cvFileWeb,
+    String? fileName,
+    String? fileType,
+  }) async {
+    try {
+      if (kIsWeb) {
+        if (cvFileWeb == null) throw Exception('CV file cannot be null');
+        return await _apiService.uploadFileWeb(
+          cvFileWeb,
+          fileName ?? 'cv_${DateTime.now().millisecondsSinceEpoch}.pdf',
+          'application/pdf',
+          fileType: fileType,
+        );
+      } else {
+        if (cvFile == null) throw Exception('CV file cannot be null');
+        return await _apiService.uploadFile(
+          cvFile,
+          fileType: fileType,
+        );
+      }
+    } catch (e) {
+      throw Exception('Failed to upload CV: $e');
     }
   }
 

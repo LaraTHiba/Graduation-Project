@@ -17,6 +17,8 @@ import 'dart:ui';
 import 'package:provider/provider.dart';
 import '../../languages/language.dart';
 import 'package:file_picker/file_picker.dart';
+import '../home/Home_Page.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class ProfilePage extends StatefulWidget {
   final String? username;
@@ -92,12 +94,14 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Future<void> _fetchUserProfile() async {
+    if (!mounted) return;
     setState(() => _isLoading = true);
 
     try {
       final profileData =
           await _profileController.getProfile(username: widget.username);
 
+      if (!mounted) return;
       setState(() {
         _userDetails = profileData;
         _userData = profileData['user'] ?? {};
@@ -112,6 +116,7 @@ class _ProfilePageState extends State<ProfilePage> {
       // Fetch user posts after profile data is loaded
       await _fetchUserPosts();
     } catch (e) {
+      if (!mounted) return;
       _showErrorDialog('Failed to load profile', 'Please try again later.');
       setState(() => _isLoading = false);
     }
@@ -122,12 +127,12 @@ class _ProfilePageState extends State<ProfilePage> {
       final username = widget.username ?? _userData['username'];
       if (username != null) {
         final posts = await _profileController.getUserPosts(username);
+        if (!mounted) return;
         setState(() {
           _userPosts = posts;
         });
       }
     } catch (e) {
-      print('Error fetching user posts: $e');
       // Don't show error dialog for posts as it's not critical
     }
   }
@@ -135,6 +140,7 @@ class _ProfilePageState extends State<ProfilePage> {
   Future<void> _updateProfile() async {
     if (!_formKey.currentState!.validate()) return;
 
+    if (!mounted) return;
     setState(() => _isSaving = true);
 
     try {
@@ -158,6 +164,7 @@ class _ProfilePageState extends State<ProfilePage> {
         );
       }
 
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Profile updated successfully'),
@@ -172,6 +179,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
       await _fetchUserProfile();
     } catch (e) {
+      if (!mounted) return;
       _showErrorDialog('Update Failed', 'Could not update profile: $e');
       setState(() => _isSaving = false);
     }
@@ -811,6 +819,8 @@ class _ProfilePageState extends State<ProfilePage> {
                                   ),
                                 ],
                                 SizedBox(height: 24),
+                                if (!isCompanyUser) _buildCVSection(),
+                                SizedBox(height: 24),
                                 Text(
                                   language.get('posts'),
                                   style: GoogleFonts.mukta(
@@ -841,12 +851,18 @@ class _ProfilePageState extends State<ProfilePage> {
                             // Company: Home (0), Explore (1), Profile (2)
                             switch (index) {
                               case 0:
-                                Navigator.pushReplacementNamed(
-                                    context, '/home');
+                                Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => const HomePage()),
+                                );
                                 break;
                               case 1:
-                                Navigator.pushReplacementNamed(
-                                    context, '/explore');
+                                Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => const HomePage()),
+                                );
                                 break;
                               case 2:
                                 // Already on profile
@@ -856,15 +872,21 @@ class _ProfilePageState extends State<ProfilePage> {
                             // User: Home (0), Groups (1), Explore (2), Profile (3)
                             switch (index) {
                               case 0:
-                                Navigator.pushReplacementNamed(
-                                    context, '/home');
+                                Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => const HomePage()),
+                                );
                                 break;
                               case 1:
                                 // TODO: Implement groups navigation
                                 break;
                               case 2:
-                                Navigator.pushReplacementNamed(
-                                    context, '/explore');
+                                Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => const HomePage()),
+                                );
                                 break;
                               case 3:
                                 // Already on profile
@@ -1155,6 +1177,40 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
+  Future<void> _uploadCV() async {
+    try {
+      if (!mounted) return;
+      setState(() => _isSaving = true);
+
+      final uploadResult = await _profileController.uploadCV(
+        cvFile: _cvFile,
+        cvFileWeb: _cvFileWeb,
+        fileName: _cvFileName,
+        fileType: 'cv',
+      );
+
+      if (uploadResult['error'] != null) {
+        _showErrorDialog('CV Upload Error', uploadResult['error']);
+        setState(() => _isSaving = false);
+        return;
+      }
+
+      await _fetchUserProfile();
+      setState(() => _isSaving = false);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('CV uploaded successfully'),
+          backgroundColor: _primaryColor,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isSaving = false);
+      _showErrorDialog('CV Upload Error', e.toString());
+    }
+  }
+
   void _showCVUploadDialog() {
     showDialog(
       context: context,
@@ -1206,17 +1262,12 @@ class _ProfilePageState extends State<ProfilePage> {
                   ),
                   child: Row(
                     children: [
-                      Icon(
-                        Icons.description,
-                        color: _primaryColor,
-                      ),
+                      Icon(Icons.description, color: _primaryColor),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
                           _cvFileName!,
-                          style: const TextStyle(
-                            fontSize: 16,
-                          ),
+                          style: const TextStyle(fontSize: 16),
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
@@ -1249,32 +1300,160 @@ class _ProfilePageState extends State<ProfilePage> {
                       ),
                     ),
                   ),
-                  ElevatedButton(
-                    onPressed: () {
-                      _pickCV();
-                      Navigator.pop(context);
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: _primaryColor,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 12,
+                  if (_cvFileName == null)
+                    ElevatedButton(
+                      onPressed: () async {
+                        await _pickCV();
+                        if (_cvFileName != null) {
+                          await _uploadCV();
+                          if (mounted) Navigator.pop(context);
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: _primaryColor,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 12,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                      child: const Text(
+                        'Choose File',
+                        style: TextStyle(fontSize: 16),
                       ),
                     ),
-                    child: const Text(
-                      'Choose File',
-                      style: TextStyle(fontSize: 16),
-                    ),
-                  ),
                 ],
               ),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Future<void> _launchCVUrl(String url) async {
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } else {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Could not open CV'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  Widget _buildCVSection() {
+    final cvUrl = _userDetails['cv_url'];
+    final savedFileName = _userDetails['cv_original_filename'] ?? 'CV';
+
+    if (cvUrl == null) return const SizedBox.shrink();
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: _primaryColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(
+                      Icons.description_rounded,
+                      color: _primaryColor,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'CV',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
+                        ),
+                      ),
+                      Text(
+                        _cvFileName ?? savedFileName,
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              Row(
+                children: [
+                  if (_isCurrentUser)
+                    IconButton(
+                      icon: const Icon(Icons.delete_outline),
+                      onPressed: () async {
+                        if (!mounted) return;
+                        setState(() {
+                          _cvFile = null;
+                          _cvFileWeb = null;
+                          _cvFileName = null;
+                          _userDetails['cv_url'] = null;
+                          _userDetails['cv_original_filename'] = null;
+                        });
+                        // Update the profile to remove the CV
+                        await _profileController.updateProfile(
+                          fullName: _fullNameController.text,
+                          bio: _bioController.text,
+                          location: _locationController.text,
+                          dateOfBirth: _dobController.text,
+                        );
+                        if (!mounted) return;
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('CV removed'),
+                            backgroundColor: _primaryColor,
+                          ),
+                        );
+                      },
+                    ),
+                  IconButton(
+                    icon: const Icon(Icons.download_rounded),
+                    onPressed: () {
+                      if (cvUrl != null) {
+                        _launchCVUrl(cvUrl);
+                      }
+                    },
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

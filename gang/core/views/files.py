@@ -6,6 +6,11 @@ from rest_framework.decorators import api_view, permission_classes, parser_class
 from django.conf import settings
 import os
 import uuid
+import logging
+from core.models.user_details import UserDetails
+from django.db import models
+
+logger = logging.getLogger(__name__)
 
 class FileUploadView(generics.GenericAPIView):
     """
@@ -24,8 +29,55 @@ class FileUploadView(generics.GenericAPIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        # Validate file type based on requested type
-        if file_type == 'video':
+        # Handle CV file upload
+        if file_type == 'cv':
+            # Validate file type
+            if not file_obj.name.lower().endswith(('.pdf', '.doc', '.docx')):
+                logger.warning(f"Invalid CV file type - User ID: {request.user.id}, Filename: {file_obj.name}")
+                return Response(
+                    {"error": "Only PDF, DOC, and DOCX files are allowed"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Validate file size (10MB limit)
+            if file_obj.size > 10 * 1024 * 1024:
+                logger.warning(f"CV file too large - User ID: {request.user.id}, Filename: {file_obj.name}, Size: {file_obj.size}")
+                return Response(
+                    {"error": "CV file too large (max 10MB)"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            try:
+                # Get or create user details
+                user_details, created = UserDetails.objects.get_or_create(user=request.user)
+                
+                # Save the CV file to the user's profile
+                user_details.cv_file = file_obj
+                user_details.save()
+                
+                # Get the URL for the saved file
+                file_url = request.build_absolute_uri(user_details.cv_file.url)
+                
+                logger.info(f"CV file uploaded successfully - User ID: {request.user.id}, Filename: {file_obj.name}")
+                
+                return Response({
+                    "file_name": file_obj.name,
+                    "file_type": "cv",
+                    "file_url": file_url,
+                    "size": file_obj.size,
+                    "cv_url": file_url,
+                    "cv_original_filename": file_obj.name
+                }, status=status.HTTP_201_CREATED)
+                
+            except Exception as e:
+                logger.error(f"Error uploading CV file - User ID: {request.user.id}, Error: {str(e)}")
+                return Response(
+                    {"error": "Failed to upload CV file"},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
+        
+        # Handle other file types
+        elif file_type == 'video':
             allowed_extensions = ['.mp4', '.mov', '.avi', '.mkv', '.webm']
             max_size = 100 * 1024 * 1024  # 100MB
             
@@ -87,4 +139,8 @@ class FileUploadView(generics.GenericAPIView):
             "file_type": file_type,
             "file_url": absolute_url,
             "size": file_obj.size
-        }, status=status.HTTP_201_CREATED) 
+        }, status=status.HTTP_201_CREATED)
+
+def get_upload_path(instance, filename):
+    # File will be uploaded to MEDIA_ROOT/user_<id>/<filename>
+    return f'user_{instance.user.id}/{filename}' 

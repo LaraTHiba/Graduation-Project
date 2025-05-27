@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'languages/language.dart';
 import 'views/auth/Login_views.dart';
 import 'views/home/Home_Page.dart';
+import 'views/profile/Profile_Page.dart';
 // import 'views/groups/groups.dart';
 import 'controllers/auth_controller.dart';
 
@@ -11,7 +12,7 @@ void main() {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => Language()),
-        Provider(create: (_) => AuthController()),
+        ChangeNotifierProvider(create: (_) => AuthController()),
       ],
       child: const MyApp(),
     ),
@@ -24,7 +25,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final language = context.watch<Language>();
-    final authController = context.read<AuthController>();
+    final authController = context.watch<AuthController>();
 
     if (!language.isInitialized) {
       return const MaterialApp(
@@ -43,44 +44,55 @@ class MyApp extends StatelessWidget {
         fontFamily: language.isRTL ? 'Cairo' : 'Roboto',
       ),
       locale: language.isRTL ? const Locale('ar') : const Locale('en'),
-      home: _AuthWrapper(authController: authController),
-      routes: {
-        '/home': (context) => const HomePage(),
-        '/login': (context) => const LoginPage(),
-        '/explore': (context) => const HomePage(),
-      },
+      home: _SplashScreen(authController: authController),
     );
   }
 }
 
-class _AuthWrapper extends StatelessWidget {
+class _SplashScreen extends StatefulWidget {
   final AuthController authController;
 
-  const _AuthWrapper({
-    required this.authController,
-  });
+  const _SplashScreen({required this.authController});
+
+  @override
+  State<_SplashScreen> createState() => _SplashScreenState();
+}
+
+class _SplashScreenState extends State<_SplashScreen> {
+  @override
+  void initState() {
+    super.initState();
+    _checkAuth();
+  }
+
+  Future<void> _checkAuth() async {
+    try {
+      final isLoggedIn = await widget.authController.isLoggedIn();
+      if (!mounted) return;
+
+      if (isLoggedIn) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const HomePage()),
+        );
+      } else {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const LoginPage()),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => const LoginPage()),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<bool>(
-      future: authController.isLoggedIn(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Scaffold(
-            body: Center(
-              child: CircularProgressIndicator(),
-            ),
-          );
-        }
-
-        // If there's an error or the user is not logged in, show login page
-        if (snapshot.hasError || snapshot.data != true) {
-          return const LoginPage();
-        }
-
-        // If the user is logged in, show home page
-        return const HomePage();
-      },
+    return const Scaffold(
+      body: Center(
+        child: CircularProgressIndicator(),
+      ),
     );
   }
 }
