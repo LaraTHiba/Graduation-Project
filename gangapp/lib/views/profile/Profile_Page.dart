@@ -1380,6 +1380,7 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Widget _buildCVSection() {
+    final theme = Theme.of(context);
     final cvUrl = _userDetails['cv_url'];
     final savedFileName = _userDetails['cv_original_filename'] ?? 'CV';
 
@@ -1389,7 +1390,7 @@ class _ProfilePageState extends State<ProfilePage> {
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.cardColor,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
@@ -1427,14 +1428,14 @@ class _ProfilePageState extends State<ProfilePage> {
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
-                          color: Colors.black87,
+                          color: theme.textTheme.titleMedium?.color,
                         ),
                       ),
                       Text(
                         _cvFileName ?? savedFileName,
                         style: TextStyle(
                           fontSize: 14,
-                          color: Colors.grey[600],
+                          color: theme.textTheme.bodySmall?.color,
                         ),
                       ),
                     ],
@@ -1445,7 +1446,8 @@ class _ProfilePageState extends State<ProfilePage> {
                 children: [
                   if (_isCurrentUser)
                     IconButton(
-                      icon: const Icon(Icons.delete_outline),
+                      icon: Icon(Icons.delete_outline,
+                          color: theme.iconTheme.color),
                       onPressed: () async {
                         if (!mounted) return;
                         setState(() {
@@ -1472,7 +1474,8 @@ class _ProfilePageState extends State<ProfilePage> {
                       },
                     ),
                   IconButton(
-                    icon: const Icon(Icons.download_rounded),
+                    icon: Icon(Icons.download_rounded,
+                        color: theme.iconTheme.color),
                     onPressed: () {
                       if (cvUrl != null) {
                         _launchCVUrl(cvUrl);

@@ -1067,10 +1067,11 @@ class _PostCardState extends State<PostCard>
   }
 
   Widget _buildCommentInput() {
+    final theme = Theme.of(context);
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.cardColor,
         borderRadius: BorderRadius.only(
           bottomLeft: Radius.circular(20),
           bottomRight: Radius.circular(20),
@@ -1094,7 +1095,7 @@ class _PostCardState extends State<PostCard>
               Expanded(
                 child: Container(
                   decoration: BoxDecoration(
-                    color: Colors.grey[100],
+                    color: theme.colorScheme.surface,
                     borderRadius: BorderRadius.circular(24),
                     boxShadow: [
                       BoxShadow(
@@ -1112,7 +1113,7 @@ class _PostCardState extends State<PostCard>
                           decoration: InputDecoration(
                             hintText: language.get('write_a_comment'),
                             hintStyle: TextStyle(
-                              color: Colors.grey[500],
+                              color: theme.hintColor,
                               fontSize: 14,
                             ),
                             border: InputBorder.none,
@@ -1122,9 +1123,9 @@ class _PostCardState extends State<PostCard>
                             ),
                           ),
                           maxLines: 1,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 14,
-                            color: Colors.black87,
+                            color: theme.textTheme.bodyMedium?.color,
                           ),
                         ),
                       ),
@@ -1149,7 +1150,7 @@ class _PostCardState extends State<PostCard>
                             padding: const EdgeInsets.all(10),
                             child: Icon(
                               Icons.photo_library_rounded,
-                              color: Colors.grey[700],
+                              color: theme.iconTheme.color,
                               size: 22,
                             ),
                           ),
@@ -1168,7 +1169,8 @@ class _PostCardState extends State<PostCard>
                   child: Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: _isSubmitting ? Colors.grey[300] : _primaryColor,
+                      color:
+                          _isSubmitting ? theme.disabledColor : _primaryColor,
                       borderRadius: BorderRadius.circular(20),
                       boxShadow: [
                         BoxShadow(
