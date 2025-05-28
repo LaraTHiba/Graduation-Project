@@ -20,6 +20,7 @@ import '../../controllers/theme_controller.dart';
 import 'package:file_picker/file_picker.dart';
 import '../home/Home_Page.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../groups/Groups_Page.dart';
 
 class ProfilePage extends StatefulWidget {
   final String? username;
@@ -909,7 +910,12 @@ class _ProfilePageState extends State<ProfilePage> {
                                 );
                                 break;
                               case 1:
-                                // TODO: Implement groups navigation
+                                // Navigate to groups page
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => const GroupsPage()),
+                                );
                                 break;
                               case 2:
                                 Navigator.pushReplacement(
@@ -946,8 +952,8 @@ class _ProfilePageState extends State<ProfilePage> {
                                   label: language.get('home'),
                                 ),
                                 BottomNavigationBarItem(
-                                  icon: const Icon(Icons.explore_rounded),
-                                  label: language.get('explore'),
+                                  icon: const Icon(Icons.smart_toy_rounded),
+                                  label: language.get('ai'),
                                 ),
                                 BottomNavigationBarItem(
                                   icon: ProfileIcon(
@@ -967,11 +973,11 @@ class _ProfilePageState extends State<ProfilePage> {
                                 ),
                                 BottomNavigationBarItem(
                                   icon: const Icon(Icons.group_rounded),
-                                  label: language.get('groups'),
+                                  label: language.get('explore'),
                                 ),
                                 BottomNavigationBarItem(
-                                  icon: const Icon(Icons.explore_rounded),
-                                  label: language.get('explore'),
+                                  icon: const Icon(Icons.smart_toy_rounded),
+                                  label: language.get('ai'),
                                 ),
                                 BottomNavigationBarItem(
                                   icon: ProfileIcon(

@@ -10,6 +10,7 @@ import '../../models/post.dart';
 import '../../views/widgets/Home_widget.dart';
 import '../../views/comment_screen.dart';
 import '../../utils/email_validator.dart';
+import '../groups/Groups_Page.dart';
 
 /// Main home page of the application
 class HomePage extends StatefulWidget {
@@ -160,7 +161,11 @@ class _HomePageState extends State<HomePage> {
       if (index == 0) {
         // Home: do nothing or refresh
       } else if (index == 1) {
-        // Groups: (if you have a groups page, otherwise do nothing)
+        // Groups: Navigate to groups page
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const GroupsPage()),
+        );
       } else if (index == 2) {
         Navigator.pushNamed(context, '/explore');
       } else if (index == 3) {

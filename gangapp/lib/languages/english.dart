@@ -62,6 +62,7 @@ class English {
     'explore': 'Explore',
     'groups': 'Groups',
     'notifications': 'Notifications',
+    'ai': 'AI',
 
     'Write a comment...': 'Write a comment...',
     'Reply to': 'Reply to',

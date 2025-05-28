@@ -84,6 +84,7 @@ class Arabic {
     'explore': 'استكشاف',
     'groups': 'المجموعات',
     'notifications': 'الإشعارات',
+    'ai': 'الذكاء الاصطناعي',
 
     'Write a comment...': '...اكتب تعليقاً...',
     'Reply to': 'الرد على',

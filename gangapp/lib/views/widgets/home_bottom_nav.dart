@@ -41,11 +41,11 @@ class HomeBottomNav extends StatelessWidget {
       if (!isCompanyUser)
         BottomNavigationBarItem(
           icon: const Icon(Icons.group_rounded),
-          label: language.get('groups'),
+          label: language.get('explore'),
         ),
       BottomNavigationBarItem(
-        icon: const Icon(Icons.explore_rounded),
-        label: language.get('explore'),
+        icon: const Icon(Icons.smart_toy_rounded),
+        label: language.get('ai'),
       ),
       BottomNavigationBarItem(
         icon: ProfileIcon(
