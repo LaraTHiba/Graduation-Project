@@ -12,6 +12,8 @@ import '../config/language.dart';
 import '../views/widgets/home_bottom_nav.dart';
 import '../views/home/Home_Page.dart';
 import '../views/profile/Profile_Page.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 class GroupsScreen extends StatefulWidget {
   const GroupsScreen({Key? key}) : super(key: key);
@@ -66,7 +68,7 @@ class _GroupsScreenState extends State<GroupsScreen>
       _error = null;
     });
     try {
-      final myGroupsData = await _controller.getMyGroups();
+      final myGroupsData = await _controller.getAllGroups();
       final availableGroupsData = await _controller.getAvailableGroups();
       setState(() {
         _myGroups = myGroupsData.map((data) => Group.fromJson(data)).toList();
@@ -84,8 +86,20 @@ class _GroupsScreenState extends State<GroupsScreen>
 
   Future<void> _createGroup(String name, String description) async {
     try {
-      await _controller.createGroup(name: name, description: description);
-      _loadGroups();
+      final headers = await _getAuthHeaders();
+      final response = await http.post(
+        Uri.parse('http://localhost:8000/api/groups/'),
+        headers: headers,
+        body: json.encode({
+          'name': name,
+          'description': description,
+        }),
+      );
+      if (response.statusCode == 201) {
+        _loadGroups();
+      } else {
+        throw Exception('Failed to create group');
+      }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(e.toString())),
@@ -268,4 +282,13 @@ class _GroupsScreenState extends State<GroupsScreen>
       ),
     );
   }
+}
+
+Future<Map<String, String>> _getAuthHeaders() async {
+  final prefs = await SharedPreferences.getInstance();
+  final token = prefs.getString('access_token'); // or whatever your key is
+  return {
+    'Content-Type': 'application/json',
+    if (token != null) 'Authorization': 'Bearer $token',
+  };
 }

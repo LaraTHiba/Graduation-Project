@@ -17,7 +17,9 @@ class GroupCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
+      color: const Color(0xFF232323),
       margin: const EdgeInsets.only(bottom: 16),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -27,9 +29,21 @@ class GroupCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Expanded(
-                  child: Text(
-                    group.name,
-                    style: ThemeConfig.titleTextStyle,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        group.name,
+                        style: ThemeConfig.titleTextStyle
+                            .copyWith(color: Colors.white),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        '@${group.createdByUsername}',
+                        style: ThemeConfig.captionTextStyle
+                            .copyWith(color: Colors.grey[400]),
+                      ),
+                    ],
                   ),
                 ),
                 ElevatedButton(
@@ -48,12 +62,13 @@ class GroupCard extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               group.description,
-              style: ThemeConfig.bodyTextStyle,
+              style: ThemeConfig.bodyTextStyle.copyWith(color: Colors.white70),
             ),
             const SizedBox(height: 8),
             Text(
               'Created: ${group.createdAt}',
-              style: ThemeConfig.captionTextStyle,
+              style: ThemeConfig.captionTextStyle
+                  .copyWith(color: Colors.grey[400]),
             ),
           ],
         ),

@@ -1,15 +1,26 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import '../config/api_config.dart';
 
 class GroupsController {
   final String baseUrl = ApiConfig.baseUrl;
 
+  Future<Map<String, String>> _getAuthHeaders() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('access_token'); // or your token key
+    return {
+      'Content-Type': 'application/json',
+      if (token != null) 'Authorization': 'Bearer $token',
+    };
+  }
+
   Future<List<Map<String, dynamic>>> getAvailableGroups() async {
     try {
+      final headers = await _getAuthHeaders();
       final response = await http.get(
         Uri.parse('$baseUrl/api/groups/available/'),
-        headers: {'Content-Type': 'application/json'},
+        headers: headers,
       );
 
       if (response.statusCode == 200) {
@@ -25,9 +36,10 @@ class GroupsController {
 
   Future<List<Map<String, dynamic>>> getMyGroups() async {
     try {
+      final headers = await _getAuthHeaders();
       final response = await http.get(
         Uri.parse('$baseUrl/api/groups/my_groups/'),
-        headers: {'Content-Type': 'application/json'},
+        headers: headers,
       );
 
       if (response.statusCode == 200) {
@@ -43,9 +55,10 @@ class GroupsController {
 
   Future<List<Map<String, dynamic>>> getAllGroups() async {
     try {
+      final headers = await _getAuthHeaders();
       final response = await http.get(
         Uri.parse('$baseUrl/api/groups/'),
-        headers: {'Content-Type': 'application/json'},
+        headers: headers,
       );
 
       if (response.statusCode == 200) {
@@ -64,9 +77,10 @@ class GroupsController {
     required String description,
   }) async {
     try {
+      final headers = await _getAuthHeaders();
       final response = await http.post(
         Uri.parse('$baseUrl/api/groups/'),
-        headers: {'Content-Type': 'application/json'},
+        headers: headers,
         body: json.encode({
           'name': name,
           'description': description,
@@ -85,9 +99,10 @@ class GroupsController {
 
   Future<void> joinGroup(int groupId) async {
     try {
+      final headers = await _getAuthHeaders();
       final response = await http.post(
         Uri.parse('$baseUrl/api/groups/$groupId/join/'),
-        headers: {'Content-Type': 'application/json'},
+        headers: headers,
       );
 
       if (response.statusCode != 200) {
@@ -100,9 +115,10 @@ class GroupsController {
 
   Future<void> leaveGroup(int groupId) async {
     try {
+      final headers = await _getAuthHeaders();
       final response = await http.post(
         Uri.parse('$baseUrl/api/groups/$groupId/leave/'),
-        headers: {'Content-Type': 'application/json'},
+        headers: headers,
       );
 
       if (response.statusCode != 200) {
