@@ -11,6 +11,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import '../../controllers/profile_controller.dart';
 import 'package:provider/provider.dart';
 import '../../languages/language.dart';
+import '../../controllers/theme_controller.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -225,6 +226,7 @@ class _PostCardState extends State<PostCard>
   }
 
   Widget _buildCommentItem(Comment comment) {
+    final theme = Theme.of(context);
     return FutureBuilder<String?>(
       future: ProfileController().getCurrentUsername(),
       builder: (context, snapshot) {
@@ -249,7 +251,7 @@ class _PostCardState extends State<PostCard>
                           padding: EdgeInsets.symmetric(
                               horizontal: 16, vertical: 12),
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: theme.cardColor,
                             borderRadius: BorderRadius.only(
                               topRight: Radius.circular(20),
                               bottomLeft: Radius.circular(20),
@@ -276,7 +278,8 @@ class _PostCardState extends State<PostCard>
                                       style: TextStyle(
                                         fontWeight: FontWeight.bold,
                                         fontSize: 14,
-                                        color: Colors.black87,
+                                        color:
+                                            theme.textTheme.titleMedium?.color,
                                       ),
                                       overflow: TextOverflow.ellipsis,
                                     ),
@@ -287,7 +290,8 @@ class _PostCardState extends State<PostCard>
                                       Text(
                                         _formatDate(comment.createdAt),
                                         style: TextStyle(
-                                          color: Colors.grey[500],
+                                          color:
+                                              theme.textTheme.bodySmall?.color,
                                           fontSize: 12,
                                         ),
                                       ),
@@ -296,7 +300,7 @@ class _PostCardState extends State<PostCard>
                                         PopupMenuButton<String>(
                                           icon: Icon(
                                             Icons.more_vert_rounded,
-                                            color: Colors.grey[500],
+                                            color: theme.iconTheme.color,
                                             size: 18,
                                           ),
                                           itemBuilder: (context) => [
@@ -305,7 +309,8 @@ class _PostCardState extends State<PostCard>
                                               child: Row(
                                                 children: [
                                                   Icon(Icons.edit_rounded,
-                                                      color: Colors.grey[700]),
+                                                      color: theme
+                                                          .iconTheme.color),
                                                   SizedBox(width: 8),
                                                   Text(language
                                                       .get('Edit comment')),
@@ -350,7 +355,7 @@ class _PostCardState extends State<PostCard>
                                 style: TextStyle(
                                   fontSize: 14,
                                   height: 1.4,
-                                  color: Colors.black.withOpacity(0.8),
+                                  color: theme.textTheme.bodyMedium?.color,
                                 ),
                               ),
                               if (comment.effectiveImageUrl != null) ...[
@@ -373,11 +378,11 @@ class _PostCardState extends State<PostCard>
                           child: TextButton.icon(
                             onPressed: () => _showReplyDialog(comment),
                             icon: Icon(Icons.reply_rounded,
-                                size: 16, color: Colors.grey[600]),
+                                size: 16, color: theme.iconTheme.color),
                             label: Text(
                               language.get('reply'),
                               style: TextStyle(
-                                color: Colors.grey[600],
+                                color: theme.textTheme.bodyMedium?.color,
                                 fontSize: 12,
                               ),
                             ),
@@ -509,6 +514,7 @@ class _PostCardState extends State<PostCard>
   }
 
   Widget _buildReplyItem(Comment reply) {
+    final theme = Theme.of(context);
     return FutureBuilder<String?>(
       future: ProfileController().getCurrentUsername(),
       builder: (context, snapshot) {
@@ -523,7 +529,7 @@ class _PostCardState extends State<PostCard>
               Container(
                 width: 2,
                 height: 40,
-                color: Colors.grey[300],
+                color: theme.dividerColor,
                 margin: EdgeInsets.only(right: 12),
               ),
               _buildAvatar(reply.username, isReply: true),
@@ -532,7 +538,7 @@ class _PostCardState extends State<PostCard>
                 child: Container(
                   padding: EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                   decoration: BoxDecoration(
-                    color: Colors.grey[50],
+                    color: theme.cardColor,
                     borderRadius: BorderRadius.only(
                       topRight: Radius.circular(16),
                       bottomLeft: Radius.circular(16),
@@ -558,7 +564,7 @@ class _PostCardState extends State<PostCard>
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 13,
-                                color: Colors.black87,
+                                color: theme.textTheme.titleMedium?.color,
                               ),
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -569,7 +575,7 @@ class _PostCardState extends State<PostCard>
                               Text(
                                 _formatDate(reply.createdAt),
                                 style: TextStyle(
-                                  color: Colors.grey[500],
+                                  color: theme.textTheme.bodySmall?.color,
                                   fontSize: 11,
                                 ),
                               ),
@@ -578,7 +584,7 @@ class _PostCardState extends State<PostCard>
                                 PopupMenuButton<String>(
                                   icon: Icon(
                                     Icons.more_vert_rounded,
-                                    color: Colors.grey[500],
+                                    color: theme.iconTheme.color,
                                     size: 16,
                                   ),
                                   itemBuilder: (context) => [
@@ -587,7 +593,7 @@ class _PostCardState extends State<PostCard>
                                       child: Row(
                                         children: [
                                           Icon(Icons.edit_rounded,
-                                              color: Colors.grey[700]),
+                                              color: theme.iconTheme.color),
                                           SizedBox(width: 8),
                                           Text(language.get('Edit reply')),
                                         ],
@@ -629,7 +635,7 @@ class _PostCardState extends State<PostCard>
                         style: TextStyle(
                           fontSize: 13,
                           height: 1.4,
-                          color: Colors.black.withOpacity(0.8),
+                          color: theme.textTheme.bodyMedium?.color,
                         ),
                       ),
                       if (reply.effectiveImageUrl != null) ...[
@@ -722,10 +728,11 @@ class _PostCardState extends State<PostCard>
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.cardColor,
         borderRadius: _borderRadius,
         boxShadow: [_boxShadow],
       ),
@@ -741,10 +748,11 @@ class _PostCardState extends State<PostCard>
   }
 
   Widget _buildPostHeader() {
+    final theme = Theme.of(context);
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.cardColor,
         borderRadius: BorderRadius.vertical(top: _borderRadius.topLeft),
       ),
       child: Row(
@@ -757,15 +765,16 @@ class _PostCardState extends State<PostCard>
               children: [
                 Text(
                   widget.post.username,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
+                    color: theme.textTheme.titleLarge?.color,
                   ),
                 ),
                 Text(
                   _formatDate(widget.post.createdAt),
                   style: TextStyle(
-                    color: Colors.grey[600],
+                    color: theme.textTheme.bodySmall?.color,
                     fontSize: 12,
                   ),
                 ),
@@ -779,6 +788,7 @@ class _PostCardState extends State<PostCard>
   }
 
   Widget _buildPostContent() {
+    final theme = Theme.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -789,7 +799,7 @@ class _PostCardState extends State<PostCard>
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: Colors.black87,
+              color: theme.textTheme.titleLarge?.color,
               letterSpacing: 0.2,
             ),
           ),
@@ -800,7 +810,7 @@ class _PostCardState extends State<PostCard>
             widget.post.content,
             style: TextStyle(
               fontSize: 16,
-              color: Colors.black.withOpacity(0.8),
+              color: theme.textTheme.bodyMedium?.color,
               height: 1.4,
             ),
           ),
@@ -821,7 +831,7 @@ class _PostCardState extends State<PostCard>
                 errorBuilder: (context, error, stackTrace) {
                   return Container(
                     height: 200,
-                    color: Colors.grey[200],
+                    color: theme.cardColor,
                     child: Center(
                       child: Icon(Icons.broken_image_rounded,
                           color: Colors.red[300], size: 40),
@@ -832,7 +842,7 @@ class _PostCardState extends State<PostCard>
                   if (loadingProgress == null) return child;
                   return Container(
                     height: 200,
-                    color: Colors.grey[100],
+                    color: theme.cardColor,
                     child: Center(
                       child: CircularProgressIndicator(
                         value: loadingProgress.expectedTotalBytes != null
@@ -852,7 +862,7 @@ class _PostCardState extends State<PostCard>
         Padding(
           padding: EdgeInsets.symmetric(horizontal: 4, vertical: 8),
           child: Divider(
-            color: Colors.grey.withOpacity(0.2),
+            color: theme.dividerColor,
             thickness: 1,
           ),
         ),
@@ -955,9 +965,10 @@ class _PostCardState extends State<PostCard>
   }
 
   Widget _buildCommentsSection() {
+    final theme = Theme.of(context);
     return Container(
       decoration: BoxDecoration(
-        color: Colors.grey[50],
+        color: theme.cardColor,
         borderRadius: BorderRadius.only(
           bottomLeft: _borderRadius.bottomLeft,
           bottomRight: _borderRadius.bottomRight,
@@ -980,10 +991,10 @@ class _PostCardState extends State<PostCard>
                     const SizedBox(width: 8),
                     Text(
                       language.get('Comments'),
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: Colors.black87,
+                        color: theme.textTheme.titleLarge?.color,
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -1025,7 +1036,7 @@ class _PostCardState extends State<PostCard>
                         _isCommentsVisible
                             ? Icons.keyboard_arrow_up_rounded
                             : Icons.keyboard_arrow_down_rounded,
-                        color: Colors.grey[700],
+                        color: theme.iconTheme.color,
                       ),
                     ),
                   ),
