@@ -16,6 +16,7 @@ import '../widgets/profile_icon.dart';
 import 'dart:ui';
 import 'package:provider/provider.dart';
 import '../../languages/language.dart';
+import '../../controllers/theme_controller.dart';
 import 'package:file_picker/file_picker.dart';
 import '../home/Home_Page.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -331,6 +332,8 @@ class _ProfilePageState extends State<ProfilePage> {
 
   Widget _buildSettingsPanel() {
     final language = context.watch<Language>();
+    final themeController = context.watch<ThemeController>();
+    final theme = Theme.of(context);
     final isCompanyUser = _userType?.toLowerCase() == 'company';
 
     return AnimatedPositioned(
@@ -345,7 +348,7 @@ class _ProfilePageState extends State<ProfilePage> {
         child: Container(
           margin: const EdgeInsets.symmetric(vertical: 24, horizontal: 8),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.85),
+            color: theme.cardColor.withOpacity(0.85),
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
@@ -418,6 +421,26 @@ class _ProfilePageState extends State<ProfilePage> {
                               ),
                             ),
                             const Divider(),
+                            ListTile(
+                              leading: Icon(
+                                themeController.isDarkMode
+                                    ? Icons.light_mode
+                                    : Icons.dark_mode,
+                                color: theme.primaryColor,
+                              ),
+                              title: Text(
+                                themeController.isDarkMode
+                                    ? 'Light Mode'
+                                    : 'Dark Mode',
+                              ),
+                              trailing: Switch(
+                                value: themeController.isDarkMode,
+                                onChanged: (bool value) {
+                                  themeController.toggleTheme();
+                                },
+                              ),
+                            ),
+                            const Divider(),
                             if (!isCompanyUser)
                               ListTile(
                                 leading: Container(
@@ -436,7 +459,8 @@ class _ProfilePageState extends State<ProfilePage> {
                                     ? Text(
                                         _cvFileName!,
                                         style: TextStyle(
-                                          color: Colors.grey[600],
+                                          color:
+                                              theme.textTheme.bodySmall?.color,
                                           fontSize: 14,
                                         ),
                                       )
@@ -498,11 +522,13 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     final language = context.watch<Language>();
+    final themeController = context.watch<ThemeController>();
+    final theme = Theme.of(context);
     final isCompanyUser = _userType?.toLowerCase() == 'company';
 
     return _isLoading
         ? Scaffold(
-            backgroundColor: Colors.white,
+            backgroundColor: theme.scaffoldBackgroundColor,
             body:
                 Center(child: CircularProgressIndicator(color: _primaryColor)))
         : Stack(
@@ -515,7 +541,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   FocusScope.of(context).unfocus();
                 },
                 child: Scaffold(
-                  backgroundColor: Colors.grey[100],
+                  backgroundColor: theme.scaffoldBackgroundColor,
                   body: CustomScrollView(
                     slivers: [
                       SliverAppBar(
@@ -639,7 +665,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                             height: 124,
                                             decoration: BoxDecoration(
                                               shape: BoxShape.circle,
-                                              color: Colors.grey.shade200,
+                                              color: theme.cardColor,
                                             ),
                                             child: ClipOval(
                                               child: _userDetails[
@@ -656,21 +682,22 @@ class _ProfilePageState extends State<ProfilePage> {
                                                       errorBuilder: (context,
                                                           error, stackTrace) {
                                                         return Container(
-                                                          color: Colors
-                                                              .grey.shade300,
+                                                          color:
+                                                              theme.cardColor,
                                                           child: Icon(
                                                             Icons.person,
                                                             size: 80,
-                                                            color: Colors
-                                                                .grey.shade400,
+                                                            color: theme
+                                                                .iconTheme
+                                                                .color,
                                                           ),
                                                         );
                                                       },
                                                     )
                                                   : Icon(Icons.person,
                                                       size: 80,
-                                                      color:
-                                                          Colors.grey.shade400),
+                                                      color: theme
+                                                          .iconTheme.color),
                                             ),
                                           ),
                                         ),
@@ -712,7 +739,8 @@ class _ProfilePageState extends State<ProfilePage> {
                                         style: GoogleFonts.mukta(
                                           fontSize: 24,
                                           fontWeight: FontWeight.bold,
-                                          color: Colors.grey[800],
+                                          color:
+                                              theme.textTheme.titleLarge?.color,
                                         ),
                                       ),
                                       SizedBox(height: 8),
@@ -726,7 +754,8 @@ class _ProfilePageState extends State<ProfilePage> {
                                             textAlign: TextAlign.center,
                                             style: GoogleFonts.mukta(
                                               fontSize: 16,
-                                              color: Colors.grey[600],
+                                              color: theme
+                                                  .textTheme.bodyMedium?.color,
                                               height: 1.5,
                                             ),
                                           ),
@@ -735,7 +764,8 @@ class _ProfilePageState extends State<ProfilePage> {
                                       Text(
                                         _userData['email'] ?? '',
                                         style: TextStyle(
-                                          color: Colors.grey[600],
+                                          color:
+                                              theme.textTheme.bodyMedium?.color,
                                           fontSize: 14,
                                         ),
                                       ),
@@ -842,7 +872,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     borderRadius:
                         const BorderRadius.vertical(top: Radius.circular(20)),
                     child: Container(
-                      color: const Color(0xFF006C5F),
+                      color: _primaryColor,
                       height: 60,
                       child: BottomNavigationBar(
                         currentIndex: isCompanyUser ? 2 : 3,
@@ -895,7 +925,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           }
                         },
                         type: BottomNavigationBarType.fixed,
-                        backgroundColor: const Color(0xFF006C5F),
+                        backgroundColor: _primaryColor,
                         elevation: 8,
                         selectedItemColor: Colors.white,
                         unselectedItemColor: Colors.white70,
