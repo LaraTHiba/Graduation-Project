@@ -6,6 +6,7 @@ import 'views/home/Home_Page.dart';
 import 'views/profile/Profile_Page.dart';
 // import 'views/groups/groups.dart';
 import 'controllers/auth_controller.dart';
+import 'controllers/theme_controller.dart';
 
 void main() {
   runApp(
@@ -13,6 +14,7 @@ void main() {
       providers: [
         ChangeNotifierProvider(create: (_) => Language()),
         ChangeNotifierProvider(create: (_) => AuthController()),
+        ChangeNotifierProvider(create: (_) => ThemeController()),
       ],
       child: const MyApp(),
     ),
@@ -26,6 +28,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     final language = context.watch<Language>();
     final authController = context.watch<AuthController>();
+    final themeController = context.watch<ThemeController>();
 
     if (!language.isInitialized) {
       return const MaterialApp(
@@ -39,9 +42,16 @@ class MyApp extends StatelessWidget {
 
     return MaterialApp(
       title: language.get('app_name'),
+      themeMode: themeController.isDarkMode ? ThemeMode.dark : ThemeMode.light,
       theme: ThemeData(
         primarySwatch: Colors.blue,
         fontFamily: language.isRTL ? 'Cairo' : 'Roboto',
+        brightness: Brightness.light,
+      ),
+      darkTheme: ThemeData(
+        primarySwatch: Colors.blue,
+        fontFamily: language.isRTL ? 'Cairo' : 'Roboto',
+        brightness: Brightness.dark,
       ),
       locale: language.isRTL ? const Locale('ar') : const Locale('en'),
       home: _SplashScreen(authController: authController),

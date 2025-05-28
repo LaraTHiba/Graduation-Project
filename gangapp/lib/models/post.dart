@@ -41,6 +41,15 @@ class Post {
   /// Whether the post has been deleted
   final bool isDeleted;
 
+  /// Whether the current user has liked the post
+  final bool isLiked;
+
+  /// Number of likes on the post
+  final int likesCount;
+
+  /// Number of comments on the post
+  final int commentsCount;
+
   /// Creates a new Post instance
   Post({
     required this.id,
@@ -56,6 +65,9 @@ class Post {
     required this.updatedAt,
     required this.comments,
     this.isDeleted = false,
+    this.isLiked = false,
+    this.likesCount = 0,
+    this.commentsCount = 0,
   });
 
   /// Gets the effective image URL, preferring the new image field over the legacy imageUrl
@@ -82,6 +94,9 @@ class Post {
       updatedAt: DateTime.parse(json['updated_at'] as String),
       comments: commentsList,
       isDeleted: json['is_deleted'] as bool? ?? false,
+      isLiked: json['is_liked'] as bool? ?? false,
+      likesCount: json['likes_count'] as int? ?? 0,
+      commentsCount: json['comments_count'] as int? ?? commentsList.length,
     );
   }
 
@@ -101,6 +116,9 @@ class Post {
       'updated_at': updatedAt.toIso8601String(),
       'comments': comments.map((comment) => comment.toJson()).toList(),
       'is_deleted': isDeleted,
+      'is_liked': isLiked,
+      'likes_count': likesCount,
+      'comments_count': commentsCount,
     };
   }
 
@@ -119,6 +137,9 @@ class Post {
     DateTime? updatedAt,
     List<Comment>? comments,
     bool? isDeleted,
+    bool? isLiked,
+    int? likesCount,
+    int? commentsCount,
   }) {
     return Post(
       id: id ?? this.id,
@@ -134,6 +155,9 @@ class Post {
       updatedAt: updatedAt ?? this.updatedAt,
       comments: comments ?? this.comments,
       isDeleted: isDeleted ?? this.isDeleted,
+      isLiked: isLiked ?? this.isLiked,
+      likesCount: likesCount ?? this.likesCount,
+      commentsCount: commentsCount ?? this.commentsCount,
     );
   }
 }
