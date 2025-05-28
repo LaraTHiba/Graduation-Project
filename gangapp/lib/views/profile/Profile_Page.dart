@@ -20,7 +20,7 @@ import '../../controllers/theme_controller.dart';
 import 'package:file_picker/file_picker.dart';
 import '../home/Home_Page.dart';
 import 'package:url_launcher/url_launcher.dart';
-import '../groups/Groups_Page.dart';
+import '../../screens/groups_screen.dart';
 
 class ProfilePage extends StatefulWidget {
   final String? username;
@@ -914,7 +914,8 @@ class _ProfilePageState extends State<ProfilePage> {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                      builder: (context) => const GroupsPage()),
+                                      builder: (context) =>
+                                          const GroupsScreen()),
                                 );
                                 break;
                               case 2:
