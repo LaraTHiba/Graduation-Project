@@ -12,6 +12,7 @@ import '../config/language.dart';
 import '../views/widgets/home_bottom_nav.dart';
 import '../views/home/Home_Page.dart';
 import '../views/profile/Profile_Page.dart';
+import '../views/auth/Login_views.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
@@ -291,4 +292,11 @@ Future<Map<String, String>> _getAuthHeaders() async {
     'Content-Type': 'application/json',
     if (token != null) 'Authorization': 'Bearer $token',
   };
+}
+
+Future<void> logout(BuildContext context) async {
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.remove('access_token'); // Remove the token
+  // Optionally clear other user data
+  Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
 }

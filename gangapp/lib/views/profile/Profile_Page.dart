@@ -21,6 +21,7 @@ import 'package:file_picker/file_picker.dart';
 import '../home/Home_Page.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../screens/groups_screen.dart';
+import '../../views/auth/Login_views.dart';
 
 class ProfilePage extends StatefulWidget {
   final String? username;
@@ -492,10 +493,11 @@ class _ProfilePageState extends State<ProfilePage> {
                                 try {
                                   await _profileController.logout();
                                   if (mounted) {
-                                    Navigator.of(context)
-                                        .pushNamedAndRemoveUntil(
-                                      '/login',
-                                      (Route<dynamic> route) => false,
+                                    Navigator.pushAndRemoveUntil(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (context) => LoginPage()),
+                                      (route) => false,
                                     );
                                   }
                                 } catch (e) {

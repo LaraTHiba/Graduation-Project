@@ -52,9 +52,16 @@ class GroupCard extends StatelessWidget {
                     backgroundColor: group.isMember
                         ? ThemeConfig.errorColor
                         : ThemeConfig.primaryColor,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 10),
                   ),
                   child: Text(
                     group.isMember ? 'Leave' : 'Join',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                 ),
               ],

@@ -28,7 +28,7 @@ class ApiService {
 
   // Profile endpoints
   static const String myProfileEndpoint = '$baseUrl/me/';
-  static const String updateProfileEndpoint = '$baseUrl/me/update/';
+  static const String updateProfileEndpoint = '$baseUrl/me/';
   static const String publicProfileEndpoint = '$baseUrl/users/'; // + username
   static const String fileUploadEndpoint = '$baseUrl/upload/';
 
