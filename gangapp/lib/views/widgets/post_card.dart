@@ -81,7 +81,7 @@ class _PostCardState extends State<PostCard>
 
   Future<void> _submitComment() async {
     if (_commentController.text.trim().isEmpty) {
-      _showSnackBar(language.get('please_write_a_comment'), isError: true);
+      _showSnackBar(language.get('Write a comment...'), isError: true);
       return;
     }
 
@@ -419,7 +419,7 @@ class _PostCardState extends State<PostCard>
             TextField(
               controller: replyController,
               decoration: InputDecoration(
-                hintText: language.get('write_your_reply'),
+                hintText: language.get('Write your reply...'),
                 border: OutlineInputBorder(),
               ),
               maxLines: 3,
@@ -451,7 +451,7 @@ class _PostCardState extends State<PostCard>
           ElevatedButton(
             onPressed: () async {
               if (replyController.text.trim().isEmpty) {
-                _showSnackBar(language.get('please_write_a_reply'),
+                _showSnackBar(language.get('Write your reply...'),
                     isError: true);
                 return;
               }
@@ -500,7 +500,7 @@ class _PostCardState extends State<PostCard>
                 }
 
                 Navigator.pop(context);
-                _showSnackBar(language.get('reply_posted_successfully'));
+                _showSnackBar(language.get('Reply posted successfully'));
               } catch (e) {
                 _showSnackBar(language.get('error') + e.toString(),
                     isError: true);
@@ -1111,7 +1111,7 @@ class _PostCardState extends State<PostCard>
                         child: TextField(
                           controller: _commentController,
                           decoration: InputDecoration(
-                            hintText: language.get('write_a_comment'),
+                            hintText: language.get('Write a comment...'),
                             hintStyle: TextStyle(
                               color: theme.hintColor,
                               fontSize: 14,

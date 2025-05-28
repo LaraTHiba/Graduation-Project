@@ -85,7 +85,7 @@ class Arabic {
     'groups': 'المجموعات',
     'notifications': 'الإشعارات',
 
-    'Write a comment...': 'اكتب تعليقاً...',
+    'Write a comment...': '...اكتب تعليقاً...',
     'Reply to': 'الرد على',
     'Write your reply...': 'اكتب ردك...',
     'Add Image': 'إضافة صورة',
