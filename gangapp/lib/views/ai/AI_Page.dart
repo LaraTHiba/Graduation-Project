@@ -46,17 +46,30 @@ class _AIPageState extends State<AIPage> {
 
   @override
   Widget build(BuildContext context) {
+    const primaryColor = Color(0xFF006C5F);
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final pageBg = isDark ? theme.scaffoldBackgroundColor : Colors.white;
+    final inputBg = isDark ? theme.cardColor : Colors.grey[100];
+    final sentBubble = isDark ? primaryColor : primaryColor;
+    final receivedBubble = isDark ? const Color(0xFF23272F) : Colors.grey[200]!;
+    final sentText = Colors.white;
+    final receivedText = isDark ? Colors.white : Colors.black87;
+    final iconColor = isDark ? Colors.white : primaryColor;
+    final avatarBg =
+        isDark ? primaryColor.withOpacity(0.2) : primaryColor.withOpacity(0.1);
+    final timeText = isDark ? Colors.white70 : Colors.black38;
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: pageBg,
       appBar: AppBar(
-        elevation: 0,
-        backgroundColor: _primaryColor,
+        elevation: 4,
+        backgroundColor: primaryColor,
         foregroundColor: Colors.white,
         title: Row(
           children: [
             CircleAvatar(
-              backgroundColor: _primaryColor.withOpacity(0.1),
-              child: Icon(Icons.smart_toy_rounded, color: Colors.white),
+              backgroundColor: avatarBg,
+              child: Icon(Icons.smart_toy_rounded, color: iconColor),
             ),
             const SizedBox(width: 12),
             Text(
@@ -71,10 +84,10 @@ class _AIPageState extends State<AIPage> {
         ),
         actions: [
           IconButton(
-              icon: const Icon(Icons.call, color: Colors.grey),
+              icon: const Icon(Icons.call, color: Colors.white70),
               onPressed: () {}),
           IconButton(
-              icon: const Icon(Icons.videocam, color: Colors.grey),
+              icon: const Icon(Icons.videocam, color: Colors.white70),
               onPressed: () {}),
         ],
       ),
@@ -86,22 +99,37 @@ class _AIPageState extends State<AIPage> {
               itemCount: _messages.length,
               itemBuilder: (context, index) {
                 final msg = _messages[index];
-                return _MessageBubble(msg: msg, primaryColor: _primaryColor);
+                return _MessageBubble(
+                  msg: msg,
+                  sentBubble: sentBubble,
+                  receivedBubble: receivedBubble,
+                  sentText: sentText,
+                  receivedText: receivedText,
+                  iconColor: iconColor,
+                  avatarBg: avatarBg,
+                  timeText: timeText,
+                  primaryColor: primaryColor,
+                  isDark: isDark,
+                );
               },
             ),
           ),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            color: Colors.white,
+            color: inputBg,
             child: Row(
               children: [
                 Expanded(
                   child: TextField(
                     controller: _controller,
+                    style: TextStyle(
+                        color: isDark ? Colors.white : Colors.black87),
                     decoration: InputDecoration(
                       hintText: 'Your messages',
+                      hintStyle: TextStyle(
+                          color: isDark ? Colors.white54 : Colors.black38),
                       filled: true,
-                      fillColor: Colors.grey[100],
+                      fillColor: isDark ? theme.cardColor : Colors.white,
                       contentPadding: const EdgeInsets.symmetric(
                           horizontal: 16, vertical: 12),
                       border: OutlineInputBorder(
@@ -113,10 +141,10 @@ class _AIPageState extends State<AIPage> {
                 ),
                 const SizedBox(width: 8),
                 CircleAvatar(
-                  backgroundColor: _primaryColor,
+                  backgroundColor: primaryColor,
                   radius: 24,
                   child: IconButton(
-                    icon: const Icon(Icons.send, color: Colors.white),
+                    icon: Icon(Icons.send, color: Colors.white),
                     onPressed: _sendMessage,
                   ),
                 ),
@@ -145,8 +173,26 @@ class _Message {
 
 class _MessageBubble extends StatelessWidget {
   final _Message msg;
+  final Color sentBubble;
+  final Color receivedBubble;
+  final Color sentText;
+  final Color receivedText;
+  final Color iconColor;
+  final Color avatarBg;
+  final Color timeText;
   final Color primaryColor;
-  const _MessageBubble({required this.msg, required this.primaryColor});
+  final bool isDark;
+  const _MessageBubble(
+      {required this.msg,
+      required this.sentBubble,
+      required this.receivedBubble,
+      required this.sentText,
+      required this.receivedText,
+      required this.iconColor,
+      required this.avatarBg,
+      required this.timeText,
+      required this.primaryColor,
+      required this.isDark});
 
   List<InlineSpan> _parseBoldText(String text, TextStyle style) {
     final regex = RegExp(r'\*\*(.*?)\*\*');
@@ -179,8 +225,8 @@ class _MessageBubble extends StatelessWidget {
       bottomRight:
           isSent ? const Radius.circular(4) : const Radius.circular(18),
     );
-    final bubbleColor = isSent ? primaryColor : Colors.grey[200];
-    final textColor = isSent ? Colors.white : Colors.black87;
+    final bubbleColor = isSent ? sentBubble : receivedBubble;
+    final textColor = isSent ? sentText : receivedText;
     return Column(
       crossAxisAlignment: align,
       children: [
@@ -193,9 +239,9 @@ class _MessageBubble extends StatelessWidget {
                 padding: const EdgeInsets.only(right: 8),
                 child: CircleAvatar(
                   radius: 18,
-                  backgroundColor: Colors.grey[300],
-                  child: Icon(Icons.smart_toy_rounded,
-                      color: primaryColor, size: 20),
+                  backgroundColor: avatarBg,
+                  child:
+                      Icon(Icons.smart_toy_rounded, color: iconColor, size: 20),
                 ),
               ),
             Flexible(
@@ -207,20 +253,33 @@ class _MessageBubble extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: bubbleColor,
                   borderRadius: radius,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.06),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                  border: Border.all(
+                    color: isSent
+                        ? primaryColor.withOpacity(0.5)
+                        : (isDark
+                            ? const Color(0xFF444950)
+                            : Colors.grey[300]!),
+                    width: 1.1,
+                  ),
                 ),
                 child: msg.isVoice
                     ? Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.play_arrow,
-                              color: isSent ? Colors.white : primaryColor),
+                          Icon(Icons.play_arrow, color: iconColor),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Container(
                               height: 4,
                               decoration: BoxDecoration(
-                                color:
-                                    isSent ? Colors.white54 : Colors.grey[400],
+                                color: iconColor.withOpacity(0.3),
                                 borderRadius: BorderRadius.circular(2),
                               ),
                             ),
@@ -228,7 +287,7 @@ class _MessageBubble extends StatelessWidget {
                           const SizedBox(width: 8),
                           Text(msg.duration ?? '',
                               style: TextStyle(
-                                  color: textColor,
+                                  color: iconColor,
                                   fontWeight: FontWeight.bold)),
                         ],
                       )
@@ -245,8 +304,8 @@ class _MessageBubble extends StatelessWidget {
                 padding: const EdgeInsets.only(left: 8),
                 child: CircleAvatar(
                   radius: 18,
-                  backgroundColor: primaryColor.withOpacity(0.1),
-                  child: Icon(Icons.person, color: primaryColor, size: 20),
+                  backgroundColor: avatarBg,
+                  child: Icon(Icons.person, color: iconColor, size: 20),
                 ),
               ),
           ],
@@ -256,7 +315,7 @@ class _MessageBubble extends StatelessWidget {
             padding: const EdgeInsets.only(top: 2, left: 8, right: 8),
             child: Text(
               msg.time!,
-              style: const TextStyle(color: Colors.grey, fontSize: 12),
+              style: TextStyle(color: timeText, fontSize: 12),
             ),
           ),
       ],
