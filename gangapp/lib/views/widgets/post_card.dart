@@ -14,6 +14,7 @@ import '../../languages/language.dart';
 import '../../controllers/theme_controller.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../views/profile/Profile_Page.dart';
 
 class PostCard extends StatefulWidget {
   final Post post;
@@ -757,28 +758,50 @@ class _PostCardState extends State<PostCard>
       ),
       child: Row(
         children: [
-          _buildAvatar(widget.post.username, isReply: false),
+          GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) =>
+                      ProfilePage(username: widget.post.username),
+                ),
+              );
+            },
+            child: _buildAvatar(widget.post.username, isReply: false),
+          ),
           const SizedBox(width: 12),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  widget.post.username,
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                    color: theme.textTheme.titleLarge?.color,
+            child: GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        ProfilePage(username: widget.post.username),
                   ),
-                ),
-                Text(
-                  _formatDate(widget.post.createdAt),
-                  style: TextStyle(
-                    color: theme.textTheme.bodySmall?.color,
-                    fontSize: 12,
+                );
+              },
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    widget.post.username,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                      color: theme.textTheme.titleLarge?.color,
+                    ),
                   ),
-                ),
-              ],
+                  Text(
+                    _formatDate(widget.post.createdAt),
+                    style: TextStyle(
+                      color: theme.textTheme.bodySmall?.color,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
           _buildPostActions(),

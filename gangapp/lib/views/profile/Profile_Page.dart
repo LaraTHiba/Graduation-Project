@@ -554,19 +554,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         backgroundColor: _primaryColor,
                         flexibleSpace: FlexibleSpaceBar(
                           title: Text(
-                            _isCurrentUser
-                                ? ''
-                                : '${_userData['username']}\'s Profile',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              shadows: [
-                                Shadow(
-                                  blurRadius: 4.0,
-                                  color: Colors.black.withOpacity(0.5),
-                                  offset: Offset(0, 2),
-                                ),
-                              ],
-                            ),
+                            _isCurrentUser ? '' : '',
                           ),
                           background: _buildBackgroundImage(),
                         ),
