@@ -23,12 +23,17 @@ def extract_text_from_pdf(file) -> str:
     if not PDF_SUPPORT:
         logger.warning("PDF extraction not available - PyPDF2 not installed")
         return ""
-    
     try:
+        logger.info(f"Starting PDF extraction for file: {getattr(file, 'name', str(file))}")
         pdf_reader = PyPDF2.PdfReader(file)
         text = ""
-        for page in pdf_reader.pages:
-            text += page.extract_text() + "\n"
+        for i, page in enumerate(pdf_reader.pages):
+            page_text = page.extract_text()
+            logger.info(f"Extracted {len(page_text) if page_text else 0} chars from page {i}")
+            if page_text:
+                text += page_text + "\n"
+        logger.info(f"Total extracted text length: {len(text)}")
+        logger.info(f"Sample extracted text: {text[:200]}")
         return text
     except Exception as e:
         logger.error(f"Error extracting text from PDF: {str(e)}")
@@ -39,12 +44,15 @@ def extract_text_from_docx(file) -> str:
     if not DOCX_SUPPORT:
         logger.warning("DOCX extraction not available - python-docx not installed")
         return ""
-    
     try:
+        logger.info(f"Starting DOCX extraction for file: {getattr(file, 'name', str(file))}")
         doc = docx.Document(file)
         text = ""
-        for paragraph in doc.paragraphs:
+        for i, paragraph in enumerate(doc.paragraphs):
+            logger.info(f"Extracted {len(paragraph.text)} chars from paragraph {i}")
             text += paragraph.text + "\n"
+        logger.info(f"Total extracted text length: {len(text)}")
+        logger.info(f"Sample extracted text: {text[:200]}")
         return text
     except Exception as e:
         logger.error(f"Error extracting text from DOCX: {str(e)}")

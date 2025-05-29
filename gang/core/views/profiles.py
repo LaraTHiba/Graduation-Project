@@ -6,6 +6,7 @@ from django.shortcuts import get_object_or_404
 import logging
 from rest_framework.exceptions import PermissionDenied
 from django.db.models import Q
+import re
 
 from core.models.user_details import UserDetails
 from core.serializers.profiles import UserDetailsSerializer, UserDetailsUpdateSerializer
@@ -110,19 +111,67 @@ class CVSearchView(generics.ListAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
+        # Log user type
+        logger.info(f"CV search attempt - User: {self.request.user.username}, User Type: {self.request.user.user_type}")
+        
         # Only company users can search CVs
         if self.request.user.user_type != 'Company':
+            logger.warning(f"Access denied - User {self.request.user.username} is not a company user")
             return UserDetails.objects.none()
 
-        # Get search keywords from query parameters
-        keywords = self.request.query_params.get('q', '').split()
-        if not keywords:
+        # Get search query from query parameters
+        query = self.request.query_params.get('q', '').strip()
+        if not query:
+            logger.info("Empty search query")
             return UserDetails.objects.none()
+
+        # Clean and prepare search terms
+        # Remove punctuation and split into words
+        search_terms = re.findall(r'\w+', query.lower())
+        if not search_terms:
+            logger.info("No valid search terms after cleaning")
+            return UserDetails.objects.none()
+
+        # Log total number of CVs in database
+        total_cvs = UserDetails.objects.filter(cv_file__isnull=False).count()
+        logger.info(f"Total CVs in database: {total_cvs}")
 
         # Build the search query
-        query = Q()
-        for keyword in keywords:
-            query &= Q(cv_text__icontains=keyword)
+        # Use Q objects to create a more flexible search
+        search_query = Q()
+        for term in search_terms:
+            # Search in cv_text (case-insensitive)
+            search_query |= Q(cv_text__icontains=term)
+            # Also search in user's full name and bio
+            search_query |= Q(full_name__icontains=term)
+            search_query |= Q(bio__icontains=term)
 
-        # Return only users with CVs that match the search
-        return UserDetails.objects.filter(query).select_related('user') 
+        # Get users with CVs that match the search
+        # Exclude users without CVs
+        queryset = UserDetails.objects.filter(
+            search_query,
+            cv_file__isnull=False
+        ).select_related('user')
+
+        # Log detailed search information
+        logger.info(f"""
+        CV search details:
+        - User: {self.request.user.username}
+        - Query: {query}
+        - Search terms: {search_terms}
+        - Total CVs: {total_cvs}
+        - Matching CVs: {queryset.count()}
+        - First few matches: {[{'username': q.user.username, 'has_cv': bool(q.cv_file)} for q in queryset[:3]]}
+        """)
+        
+        return queryset
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        
+        # If no results found, return a helpful message
+        if not queryset.exists():
+            return Response([])
+        
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data) 

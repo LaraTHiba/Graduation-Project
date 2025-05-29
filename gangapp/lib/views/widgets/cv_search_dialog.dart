@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../services/api_service.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'dart:convert';
 
 class CVSearchDialog extends StatefulWidget {
   const CVSearchDialog({Key? key}) : super(key: key);
@@ -23,10 +24,11 @@ class _CVSearchDialogState extends State<CVSearchDialog> {
       _error = null;
     });
     try {
-      final results =
+      final response =
           await ApiService().searchCVs(_searchController.text.trim());
+      final results = response;
       setState(() {
-        _results = results;
+        _results = List<Map<String, dynamic>>.from(results);
       });
     } catch (e) {
       setState(() {

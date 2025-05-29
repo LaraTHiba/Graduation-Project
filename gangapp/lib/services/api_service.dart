@@ -1679,8 +1679,10 @@ class ApiService {
     );
 
     if (response.statusCode == 200) {
-      final List<dynamic> data = jsonDecode(response.body);
-      return data.map((interest) => interest as Map<String, dynamic>).toList();
+      final responseJson = jsonDecode(response.body);
+      final results =
+          responseJson is List ? responseJson : (responseJson['results'] ?? []);
+      return List<Map<String, dynamic>>.from(results);
     } else {
       throw Exception('Failed to load interests: ${response.body}');
     }
@@ -1828,7 +1830,10 @@ class ApiService {
       },
     );
     if (response.statusCode == 200) {
-      return List<Map<String, dynamic>>.from(json.decode(response.body));
+      final responseJson = jsonDecode(response.body);
+      final results =
+          responseJson is List ? responseJson : (responseJson['results'] ?? []);
+      return List<Map<String, dynamic>>.from(results);
     } else {
       throw Exception('Failed to search CVs: ${response.body}');
     }
