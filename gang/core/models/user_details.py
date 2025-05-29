@@ -12,6 +12,7 @@ class UserDetails(models.Model):
     full_name = models.CharField(max_length=200, blank=True, null=True)
     profile_picture = models.ImageField(upload_to=get_upload_path, blank=True, null=True)
     cv_file = models.FileField(upload_to=get_upload_path, blank=True, null=True, help_text='Upload your CV (PDF, DOC, DOCX)')
+    cv_text = models.TextField(blank=True, null=True, help_text='Extracted text from CV file')
     bio = models.TextField(blank=True, null=True)
     location = models.CharField(max_length=100, blank=True, null=True)
     date_of_birth = models.DateTimeField(null=True, blank=True)

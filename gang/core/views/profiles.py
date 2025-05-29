@@ -5,9 +5,11 @@ from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
 import logging
 from rest_framework.exceptions import PermissionDenied
+from django.db.models import Q
 
 from core.models.user_details import UserDetails
 from core.serializers.profiles import UserDetailsSerializer, UserDetailsUpdateSerializer
+from core.utils.cv_extractor import extract_cv_text
 
 logger = logging.getLogger(__name__)
 
@@ -70,6 +72,9 @@ class UserProfileView(generics.RetrieveUpdateAPIView):
                         status=status.HTTP_400_BAD_REQUEST
                     )
                 
+                # Extract text from CV file
+                cv_text = extract_cv_text(cv_file)
+                instance.cv_text = cv_text
                 instance.cv_file = cv_file
                 instance.save()
                 logger.info(f"CV file saved successfully - User ID: {request.user.id}, Filename: {cv_file.name}")
@@ -94,4 +99,30 @@ class PublicUserProfileView(generics.RetrieveAPIView):
             return user_details
         except Exception as e:
             logger.error(f"Error in public profile view - Username: {self.kwargs.get('username')}, Error: {str(e)}")
-            raise 
+            raise
+
+class CVSearchView(generics.ListAPIView):
+    """
+    Search users by CV content.
+    Only accessible by company users.
+    """
+    serializer_class = UserDetailsSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        # Only company users can search CVs
+        if self.request.user.user_type != 'Company':
+            return UserDetails.objects.none()
+
+        # Get search keywords from query parameters
+        keywords = self.request.query_params.get('q', '').split()
+        if not keywords:
+            return UserDetails.objects.none()
+
+        # Build the search query
+        query = Q()
+        for keyword in keywords:
+            query &= Q(cv_text__icontains=keyword)
+
+        # Return only users with CVs that match the search
+        return UserDetails.objects.filter(query).select_related('user') 

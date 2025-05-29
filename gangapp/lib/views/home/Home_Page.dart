@@ -4,7 +4,6 @@ import '../../languages/language.dart';
 import '../profile/Profile_Page.dart';
 import '../widgets/create_post_dialog.dart';
 import '../widgets/home_bottom_nav.dart';
-import '../widgets/pro_company_request_dialog.dart';
 import '../../controllers/home_controller.dart';
 import '../../models/post.dart';
 import '../../views/widgets/Home_widget.dart';
@@ -12,6 +11,7 @@ import '../../views/comment_screen.dart';
 import '../../utils/email_validator.dart';
 import '../../screens/groups_screen.dart';
 import '../ai/AI_Page.dart';
+import '../widgets/cv_search_dialog.dart';
 
 /// Main home page of the application
 class HomePage extends StatefulWidget {
@@ -131,14 +131,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  void _showProCompanyRequestDialog() {
-    showDialog(
-      context: context,
-      barrierColor: Colors.black54,
-      builder: (context) => const ProCompanyRequestDialog(),
-    );
-  }
-
   void _onTabSelected(int index) {
     setState(() => _currentIndex = index);
 
@@ -197,53 +189,60 @@ class _HomePageState extends State<HomePage> {
   List<Widget> _buildAppBarActions() {
     final isCompanyUser = _userType == 'Company';
 
-    final actions = <Widget>[
+    final actions = <Widget>[];
+
+    if (isCompanyUser) {
+      actions.add(
+        Container(
+          margin: const EdgeInsets.symmetric(horizontal: 8.0),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(20),
+            onTap: () {
+              showDialog(
+                context: context,
+                builder: (context) => const CVSearchDialog(),
+              );
+            },
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: const [
+                Icon(Icons.search, color: Colors.white),
+                SizedBox(width: 6),
+                Text(
+                  'Find job candidates',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                    color: Colors.white,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    } else {
+      actions.add(
+        IconButton(
+          icon: Icon(Icons.search),
+          onPressed: () {
+            showDialog(
+              context: context,
+              builder: (context) => const CVSearchDialog(),
+            );
+          },
+        ),
+      );
+    }
+
+    actions.add(
       IconButton(
         icon: const Icon(Icons.notifications_rounded),
         onPressed: () {
           // TODO: Implement notifications
         },
       ),
-    ];
-
-    if (isCompanyUser) {
-      actions.insert(
-        0,
-        Container(
-          margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-          decoration: BoxDecoration(
-            color: const Color(0xFF006C5F),
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.18),
-                blurRadius: 8,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: TextButton.icon(
-            icon: const Icon(Icons.business_rounded,
-                color: Colors.white, size: 20),
-            label: const Text(
-              'Pro',
-              style:
-                  TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-            ),
-            onPressed: _showProCompanyRequestDialog,
-            style: TextButton.styleFrom(
-              backgroundColor: Colors.transparent,
-              shadowColor: Colors.transparent,
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-                side: BorderSide.none,
-              ),
-            ),
-          ),
-        ),
-      );
-    }
+    );
 
     return actions;
   }

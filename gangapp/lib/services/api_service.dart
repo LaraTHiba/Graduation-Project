@@ -1815,4 +1815,22 @@ class ApiService {
       'Authorization': 'Bearer $token',
     };
   }
+
+  // Search CVs for company users
+  Future<List<Map<String, dynamic>>> searchCVs(String keywords) async {
+    final token = await getAuthToken();
+    final response = await http.get(
+      Uri.parse(
+          'http://127.0.0.1:8000/api/cv-search/?q=${Uri.encodeComponent(keywords)}'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+    );
+    if (response.statusCode == 200) {
+      return List<Map<String, dynamic>>.from(json.decode(response.body));
+    } else {
+      throw Exception('Failed to search CVs: ${response.body}');
+    }
+  }
 }
