@@ -11,6 +11,7 @@ import '../../views/widgets/Home_widget.dart';
 import '../../views/comment_screen.dart';
 import '../../utils/email_validator.dart';
 import '../../screens/groups_screen.dart';
+import '../ai/AI_Page.dart';
 
 /// Main home page of the application
 class HomePage extends StatefulWidget {
@@ -145,11 +146,14 @@ class _HomePageState extends State<HomePage> {
 
     // Map the index to the correct action
     if (isCompanyUser) {
-      // Company: Home (0), Explore (1), Profile (2)
+      // Company: Home (0), AI (1), Profile (2)
       if (index == 0) {
         // Home: do nothing or refresh
       } else if (index == 1) {
-        Navigator.pushNamed(context, '/explore');
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const AIPage()),
+        );
       } else if (index == 2) {
         Navigator.push(
           context,
@@ -157,7 +161,7 @@ class _HomePageState extends State<HomePage> {
         ).then((_) => _fetchUserProfile());
       }
     } else {
-      // User: Home (0), Groups (1), Explore (2), Profile (3)
+      // User: Home (0), Groups (1), AI (2), Profile (3)
       if (index == 0) {
         // Home: do nothing or refresh
       } else if (index == 1) {
@@ -167,7 +171,10 @@ class _HomePageState extends State<HomePage> {
           MaterialPageRoute(builder: (context) => const GroupsScreen()),
         );
       } else if (index == 2) {
-        Navigator.pushNamed(context, '/explore');
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const AIPage()),
+        );
       } else if (index == 3) {
         Navigator.push(
           context,

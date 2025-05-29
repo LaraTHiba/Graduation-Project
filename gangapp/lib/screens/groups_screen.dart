@@ -13,6 +13,7 @@ import '../views/widgets/home_bottom_nav.dart';
 import '../views/home/Home_Page.dart';
 import '../views/profile/Profile_Page.dart';
 import '../views/auth/Login_views.dart';
+import '../views/ai/AI_Page.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
@@ -142,7 +143,10 @@ class _GroupsScreenState extends State<GroupsScreen>
           );
           break;
         case 1:
-          // AI page
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const AIPage()),
+          );
           break;
         case 2:
           Navigator.pushReplacement(
@@ -164,7 +168,10 @@ class _GroupsScreenState extends State<GroupsScreen>
           // Already on groups page
           break;
         case 2:
-          // AI page
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const AIPage()),
+          );
           break;
         case 3:
           Navigator.pushReplacement(

@@ -22,6 +22,7 @@ import '../home/Home_Page.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../screens/groups_screen.dart';
 import '../../views/auth/Login_views.dart';
+import '../ai/AI_Page.dart';
 
 class ProfilePage extends StatefulWidget {
   final String? username;
@@ -869,7 +870,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         currentIndex: isCompanyUser ? 2 : 3,
                         onTap: (index) {
                           if (isCompanyUser) {
-                            // Company: Home (0), Explore (1), Profile (2)
+                            // Company: Home (0), AI (1), Profile (2)
                             switch (index) {
                               case 0:
                                 Navigator.pushReplacement(
@@ -879,10 +880,10 @@ class _ProfilePageState extends State<ProfilePage> {
                                 );
                                 break;
                               case 1:
-                                Navigator.pushReplacement(
+                                Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                      builder: (context) => const HomePage()),
+                                      builder: (context) => const AIPage()),
                                 );
                                 break;
                               case 2:
@@ -890,7 +891,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                 break;
                             }
                           } else {
-                            // User: Home (0), Groups (1), Explore (2), Profile (3)
+                            // User: Home (0), Groups (1), AI (2), Profile (3)
                             switch (index) {
                               case 0:
                                 Navigator.pushReplacement(
@@ -909,10 +910,10 @@ class _ProfilePageState extends State<ProfilePage> {
                                 );
                                 break;
                               case 2:
-                                Navigator.pushReplacement(
+                                Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                      builder: (context) => const HomePage()),
+                                      builder: (context) => const AIPage()),
                                 );
                                 break;
                               case 3:
