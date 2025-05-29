@@ -16,8 +16,10 @@ class GroupCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     return Card(
-      color: const Color(0xFF232323),
+      color: isDark ? const Color(0xFF23272F) : theme.cardColor,
       margin: const EdgeInsets.only(bottom: 16),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
@@ -34,14 +36,18 @@ class GroupCard extends StatelessWidget {
                     children: [
                       Text(
                         group.name,
-                        style: ThemeConfig.titleTextStyle
-                            .copyWith(color: Colors.white),
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          color: theme.textTheme.titleLarge?.color,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       const SizedBox(height: 2),
                       Text(
                         '@${group.createdByUsername}',
-                        style: ThemeConfig.captionTextStyle
-                            .copyWith(color: Colors.grey[400]),
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.textTheme.bodySmall?.color
+                              ?.withOpacity(0.7),
+                        ),
                       ),
                     ],
                   ),
@@ -49,9 +55,8 @@ class GroupCard extends StatelessWidget {
                 ElevatedButton(
                   onPressed: group.isMember ? onLeave : onJoin,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: group.isMember
-                        ? ThemeConfig.errorColor
-                        : ThemeConfig.primaryColor,
+                    backgroundColor:
+                        group.isMember ? Colors.red : theme.colorScheme.primary,
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(20),
@@ -69,13 +74,16 @@ class GroupCard extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               group.description,
-              style: ThemeConfig.bodyTextStyle.copyWith(color: Colors.white70),
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.textTheme.bodyMedium?.color?.withOpacity(0.85),
+              ),
             ),
             const SizedBox(height: 8),
             Text(
               'Created: ${group.createdAt}',
-              style: ThemeConfig.captionTextStyle
-                  .copyWith(color: Colors.grey[400]),
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.textTheme.bodySmall?.color?.withOpacity(0.7),
+              ),
             ),
           ],
         ),
