@@ -105,9 +105,8 @@ class _CVSearchDialogState extends State<CVSearchDialog> {
                     final profile = _results[index];
                     return ListTile(
                       leading: const Icon(Icons.description),
-                      title: Text(
-                          profile['full_name'] ?? profile['username'] ?? ''),
-                      subtitle: Text(profile['bio'] ?? ''),
+                      title: Text(profile['user']?['username'] ?? ''),
+                      subtitle: Text(profile['cv_original_filename'] ?? ''),
                       trailing: profile['cv_file_url'] != null
                           ? IconButton(
                               icon: const Icon(Icons.download),
