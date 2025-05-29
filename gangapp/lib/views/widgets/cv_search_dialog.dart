@@ -110,11 +110,13 @@ class _CVSearchDialogState extends State<CVSearchDialog> {
                       subtitle: Text(profile['bio'] ?? ''),
                       trailing: profile['cv_file_url'] != null
                           ? IconButton(
-                              icon: const Icon(Icons.open_in_new),
+                              icon: const Icon(Icons.download),
+                              tooltip: 'Download CV',
                               onPressed: () async {
                                 final url = profile['cv_file_url'];
                                 if (url != null && await canLaunch(url)) {
-                                  await launch(url);
+                                  await launch(url,
+                                      webOnlyWindowName: '_blank');
                                 }
                               },
                             )

@@ -17,6 +17,7 @@ class UserDetailsSerializer(serializers.ModelSerializer):
     background_image_url = serializers.SerializerMethodField()
     cv_url = serializers.SerializerMethodField()
     cv_original_filename = serializers.SerializerMethodField()
+    cv_file_url = serializers.SerializerMethodField()
     
     class Meta:
         model = UserDetails
@@ -24,9 +25,9 @@ class UserDetailsSerializer(serializers.ModelSerializer):
             'id', 'user', 'full_name', 'profile_picture', 'profile_picture_url', 
             'bio', 'location', 'date_of_birth', 'background_image', 
             'background_image_url', 'theme', 'font_style', 'social_links',
-            'cv_file', 'cv_url', 'cv_original_filename', 'created_at', 'updated_at'
+            'cv_file', 'cv_url', 'cv_original_filename', 'cv_file_url', 'created_at', 'updated_at'
         ]
-        read_only_fields = ['id', 'user', 'created_at', 'updated_at', 'profile_picture_url', 'background_image_url', 'cv_url', 'cv_original_filename']
+        read_only_fields = ['id', 'user', 'created_at', 'updated_at', 'profile_picture_url', 'background_image_url', 'cv_url', 'cv_original_filename', 'cv_file_url']
     
     def get_profile_picture_url(self, obj):
         if obj.profile_picture:
@@ -72,6 +73,14 @@ class UserDetailsSerializer(serializers.ModelSerializer):
         except Exception as e:
             logger.error(f"Error getting CV filename for user {obj.user.id}: {str(e)}")
             return None
+
+    def get_cv_file_url(self, obj):
+        request = self.context.get('request')
+        if obj.cv_file and hasattr(obj.cv_file, 'url'):
+            if request:
+                return request.build_absolute_uri(obj.cv_file.url)
+            return obj.cv_file.url
+        return None
 
 class UserDetailsUpdateSerializer(serializers.ModelSerializer):
     class Meta:
