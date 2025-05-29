@@ -2,6 +2,7 @@ from rest_framework import serializers
 from core.models.posts import Post
 from core.models.comments import Comment
 from django.contrib.auth import get_user_model
+from core.models.interests import Interest
 
 User = get_user_model()
 
@@ -37,6 +38,15 @@ class PostSerializer(serializers.ModelSerializer):
     username = serializers.SerializerMethodField()
     comments = serializers.SerializerMethodField()
     image_full_url = serializers.SerializerMethodField()
+    interest = serializers.PrimaryKeyRelatedField(
+        queryset=Interest.objects.all(),
+        required=False,
+        allow_null=True,
+        error_messages={
+            'does_not_exist': 'The specified interest does not exist.',
+            'invalid': 'Invalid interest value.'
+        }
+    )
     
     class Meta:
         model = Post

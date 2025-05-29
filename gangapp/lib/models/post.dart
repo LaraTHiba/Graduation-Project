@@ -81,15 +81,15 @@ class Post {
         : <Comment>[];
 
     return Post(
-      id: json['id'] as int,
-      user: json['user'] as int,
+      id: json['id'] as int? ?? 0,
+      user: json['user'] as int? ?? 0,
       username: json['username'] as String,
       title: json['title'] as String,
       content: json['content'] as String,
       imageUrl: json['image_url'] as String?,
       image: json['image'] as String?,
       profileImageUrl: json['user_details']?['profile_picture_url'] as String?,
-      interest: json['interest'] as int,
+      interest: json['interest'] as int? ?? 0,
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
       comments: commentsList,

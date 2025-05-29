@@ -18,7 +18,7 @@ class Post(models.Model):
     image_url = models.URLField(max_length=255, blank=True, null=True)
     # New image field that uses the storage path function
     image = models.ImageField(upload_to=post_image_path, blank=True, null=True)
-    interest = models.ForeignKey(Interest, on_delete=models.CASCADE)
+    interest = models.ForeignKey(Interest, on_delete=models.CASCADE, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     is_deleted = models.BooleanField(default=False)
