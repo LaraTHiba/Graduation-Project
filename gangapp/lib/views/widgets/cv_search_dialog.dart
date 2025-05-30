@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../../services/api_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:convert';
+import 'package:provider/provider.dart';
+import '../../languages/language.dart';
 
 class CVSearchDialog extends StatefulWidget {
   const CVSearchDialog({Key? key}) : super(key: key);
@@ -42,6 +44,7 @@ class _CVSearchDialogState extends State<CVSearchDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final language = context.read<Language>();
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: Padding(
@@ -56,8 +59,8 @@ class _CVSearchDialogState extends State<CVSearchDialog> {
                 Expanded(
                   child: TextField(
                     controller: _searchController,
-                    decoration: const InputDecoration(
-                      hintText: 'Enter keywords to search CVs...',
+                    decoration: InputDecoration(
+                      hintText: language.get('Cv search hint'),
                       border: InputBorder.none,
                     ),
                     onSubmitted: (_) => _onSearch(),
@@ -72,7 +75,7 @@ class _CVSearchDialogState extends State<CVSearchDialog> {
             const SizedBox(height: 16),
             ElevatedButton.icon(
               icon: const Icon(Icons.search),
-              label: const Text('Search'),
+              label: Text(language.get('Cv search')),
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF006C5F),
                 foregroundColor: Colors.white,
@@ -110,7 +113,7 @@ class _CVSearchDialogState extends State<CVSearchDialog> {
                       trailing: profile['cv_file_url'] != null
                           ? IconButton(
                               icon: const Icon(Icons.download),
-                              tooltip: 'Download CV',
+                              tooltip: language.get('Download cv'),
                               onPressed: () async {
                                 final url = profile['cv_file_url'];
                                 if (url != null && await canLaunch(url)) {
@@ -125,9 +128,9 @@ class _CVSearchDialogState extends State<CVSearchDialog> {
                 ),
               )
             else if (!_isSearching && _results.isEmpty && _hasSearched)
-              const Text('No results found.')
+              Text(language.get('Cv no results'))
             else if (!_isSearching && _results.isEmpty && !_hasSearched)
-              const Text('No results yet. Enter keywords and search.'),
+              Text(language.get('Cv no results yet')),
           ],
         ),
       ),

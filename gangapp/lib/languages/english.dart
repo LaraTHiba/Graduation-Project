@@ -70,5 +70,15 @@ class English {
     'Add Image': 'Add Image',
     'Post Reply': 'Post Reply',
     'Please write a reply': 'Please write a reply',
+
+    'find job candidates': 'Find job candidates',
+    'cv search hint': 'Enter keywords to search CVs...',
+    'cv search': 'Search',
+    'download cv': 'Download CV',
+    'cv no results': 'No results found.',
+    'cv no results yet': 'No results yet. Enter keywords and search.',
+
+    'light mode': 'Light Mode',
+    'dark mode': 'Dark Mode',
   };
 }

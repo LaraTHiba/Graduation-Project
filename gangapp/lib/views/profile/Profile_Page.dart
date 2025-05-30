@@ -433,8 +433,8 @@ class _ProfilePageState extends State<ProfilePage> {
                               ),
                               title: Text(
                                 themeController.isDarkMode
-                                    ? 'Light Mode'
-                                    : 'Dark Mode',
+                                    ? language.get('Light Mode')
+                                    : language.get('Dark Mode'),
                               ),
                               trailing: Switch(
                                 value: themeController.isDarkMode,

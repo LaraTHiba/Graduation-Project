@@ -94,5 +94,13 @@ class Arabic {
     'Please write a reply': 'يرجى كتابة الرد',
     'Update post': 'تحديث المنشور',
     'delete_post_confirmation': 'هل أنت متأكد أنك تريد حذف هذا المنشور؟',
+    'Find job candidates': 'ابحث عن مرشحي الوظائف',
+    'Cv search hint': 'أدخل كلمات البحث للبحث في السير الذاتية...',
+    'Cv search': 'بحث',
+    'Download cv': 'تحميل السيرة الذاتية',
+    'Cv no results': 'لا توجد نتائج.',
+    'Cv no results yet': 'لا توجد نتائج بعد. أدخل كلمات البحث وابحث.',
+    'Light Mode': 'الوضع الفاتح',
+    'Dark Mode': 'الوضع الداكن',
   };
 }

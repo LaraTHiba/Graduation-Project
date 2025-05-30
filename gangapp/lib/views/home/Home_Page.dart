@@ -205,11 +205,11 @@ class _HomePageState extends State<HomePage> {
             },
             child: Row(
               mainAxisSize: MainAxisSize.min,
-              children: const [
+              children: [
                 Icon(Icons.search, color: Colors.white),
                 SizedBox(width: 6),
                 Text(
-                  'Find job candidates',
+                  context.read<Language>().get('Find job candidates'),
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
