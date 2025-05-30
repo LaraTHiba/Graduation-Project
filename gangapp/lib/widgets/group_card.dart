@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../models/group.dart';
 import '../config/theme.dart';
+import '../languages/language.dart';
+import 'package:provider/provider.dart';
 
 class GroupCard extends StatelessWidget {
   final Group group;
@@ -65,7 +67,9 @@ class GroupCard extends StatelessWidget {
                         horizontal: 20, vertical: 10),
                   ),
                   child: Text(
-                    group.isMember ? 'Leave' : 'Join',
+                    group.isMember
+                        ? context.read<Language>().get('Leave')
+                        : context.read<Language>().get('Join'),
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                 ),

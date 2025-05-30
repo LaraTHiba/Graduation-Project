@@ -13,6 +13,11 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 from datetime import timedelta
 import os
 from pathlib import Path
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -190,3 +195,6 @@ EMAIL_HOST_USER = ''  # Your email
 EMAIL_HOST_PASSWORD = ''  # Your email password
 DEFAULT_FROM_EMAIL = ''  # Your email
 FRONTEND_URL = 'http://localhost:3000'  # Change this to your frontend URL
+
+# OpenAI Configuration
+OPENAI_API_KEY = os.getenv('OPENAI_API_KEY', '')

@@ -16,6 +16,7 @@ import '../views/auth/Login_views.dart';
 import '../views/ai/AI_Page.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import '../views/ai/AI_Page.dart';
 
 class GroupsScreen extends StatefulWidget {
   const GroupsScreen({Key? key}) : super(key: key);
@@ -145,7 +146,7 @@ class _GroupsScreenState extends State<GroupsScreen>
         case 1:
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => const AIPage()),
+            MaterialPageRoute(builder: (context) => const AI_Page()),
           );
           break;
         case 2:
@@ -170,7 +171,7 @@ class _GroupsScreenState extends State<GroupsScreen>
         case 2:
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => const AIPage()),
+            MaterialPageRoute(builder: (context) => const AI_Page()),
           );
           break;
         case 3:
@@ -222,8 +223,8 @@ class _GroupsScreenState extends State<GroupsScreen>
             unselectedLabelColor: const Color.fromARGB(255, 255, 255, 255),
             indicatorColor: const Color.fromARGB(255, 255, 255, 255),
             tabs: [
-              Tab(text: Language.translate('my_groups')),
-              Tab(text: Language.translate('available_groups')),
+              Tab(text: Language.translate('My Groups')),
+              Tab(text: Language.translate('Available Groups')),
             ],
           ),
         ),

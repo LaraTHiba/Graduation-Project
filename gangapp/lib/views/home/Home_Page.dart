@@ -13,6 +13,7 @@ import '../../screens/groups_screen.dart';
 import '../ai/AI_Page.dart';
 import '../widgets/cv_search_dialog.dart';
 
+
 /// Main home page of the application
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -144,7 +145,7 @@ class _HomePageState extends State<HomePage> {
       } else if (index == 1) {
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => const AIPage()),
+          MaterialPageRoute(builder: (context) => const AI_Page()),
         );
       } else if (index == 2) {
         Navigator.push(
@@ -165,7 +166,7 @@ class _HomePageState extends State<HomePage> {
       } else if (index == 2) {
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => const AIPage()),
+          MaterialPageRoute(builder: (context) => const AI_Page()),
         );
       } else if (index == 3) {
         Navigator.push(

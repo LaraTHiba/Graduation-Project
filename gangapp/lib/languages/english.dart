@@ -80,5 +80,27 @@ class English {
 
     'light mode': 'Light Mode',
     'dark mode': 'Dark Mode',
+
+    'join': 'Join',
+    'leave': 'Leave',
+    'my groups': 'My Groups',
+    'available groups': 'Available Groups',
+    'no my groups': 'No groups yet.',
+    'no available groups': 'No available groups yet.',
+    'create group': 'Create Group',
+    'group name': 'Group Name',
+    'group description': 'Group Description',
+    'create': 'Create',
+    'group created': 'Group created successfully',
+    'group updated': 'Group updated successfully',
+    'group': 'Group',
+    'group members': 'Group Members',
+    'group posts': 'Group Posts',
+    'group members count': 'Group Members Count',
+    'group posts count': 'Group Posts Count',
+    'group created at': 'Group Created At',
+    'group updated at': 'Group Updated At',
+
+    'Write a message...': 'Write a message...',
   };
 }
