@@ -9,6 +9,7 @@ import uuid
 import logging
 from core.models.user_details import UserDetails
 from django.db import models
+from core.utils.cv_extractor import extract_cv_text
 
 logger = logging.getLogger(__name__)
 
@@ -53,6 +54,9 @@ class FileUploadView(generics.GenericAPIView):
                 
                 # Save the CV file to the user's profile
                 user_details.cv_file = file_obj
+                # Extract text from CV file and save it
+                cv_text = extract_cv_text(file_obj)
+                user_details.cv_text = cv_text
                 user_details.save()
                 
                 # Get the URL for the saved file

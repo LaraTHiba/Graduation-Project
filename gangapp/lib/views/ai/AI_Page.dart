@@ -44,34 +44,52 @@ class _AI_PageState extends State<AI_Page> {
 
     final welcomeMessage = TextSpan(
       style: TextStyle(
-        color: isDarkMode ? Colors.white : null,
+        color: isDarkMode ? Colors.white : Colors.black,
       ),
       children: [
         TextSpan(
             text: "Welcome to ",
-            style: TextStyle(fontWeight: FontWeight.normal)),
+            style: TextStyle(
+                fontWeight: FontWeight.normal,
+                color: isDarkMode ? Colors.white : Colors.black)),
         TextSpan(
           text: "Gang App",
-          style: TextStyle(fontWeight: FontWeight.bold),
+          style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: isDarkMode ? Colors.white : Colors.black),
         ),
         TextSpan(
-            text: " 🎉\n", style: TextStyle(fontWeight: FontWeight.normal)),
+            text: " 🎉\n",
+            style: TextStyle(
+                fontWeight: FontWeight.normal,
+                color: isDarkMode ? Colors.white : Colors.black)),
         TextSpan(
             text: "We\'re glad to have you here ",
-            style: TextStyle(fontWeight: FontWeight.normal)),
+            style: TextStyle(
+                fontWeight: FontWeight.normal,
+                color: isDarkMode ? Colors.white : Colors.black)),
         TextSpan(
           text: "$username",
-          style: TextStyle(fontWeight: FontWeight.bold),
+          style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: isDarkMode ? Colors.white : Colors.black),
         ),
         TextSpan(
-            text: ".\n\n", style: TextStyle(fontWeight: FontWeight.normal)),
+            text: ".\n\n",
+            style: TextStyle(
+                fontWeight: FontWeight.normal,
+                color: isDarkMode ? Colors.white : Colors.black)),
         TextSpan(
             text:
                 "DeepSeek assistant here to make your experience even better! 🤖\n\n",
-            style: TextStyle(fontWeight: FontWeight.normal)),
+            style: TextStyle(
+                fontWeight: FontWeight.normal,
+                color: isDarkMode ? Colors.white : Colors.black)),
         TextSpan(
             text: "Thanks for joining the Gang",
-            style: TextStyle(fontWeight: FontWeight.normal)),
+            style: TextStyle(
+                fontWeight: FontWeight.normal,
+                color: isDarkMode ? Colors.white : Colors.black)),
       ],
     );
 
