@@ -12,7 +12,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'dart:io' if (dart.library.js) 'dart:ui' as io;
 
 class ApiService {
-  static const String baseUrl = 'http://127.0.0.1:8000/api';
+  static const String baseUrl = 'http://192.168.88.10:8000/api';
 
   // Auth endpoints
   static const String loginEndpoint = '$baseUrl/auth/login/';
@@ -1784,32 +1784,6 @@ class ApiService {
     }
   }
 
-  // Delete user account
-  // Future<bool> deleteAccount() async {
-  //   final token = await getAuthToken();
-
-  //   try {
-  //     final response = await http.delete(
-  //       Uri.parse('$baseUrl/auth/delete-account/'),
-  //       headers: {
-  //         'Content-Type': 'application/json',
-  //         'Authorization': 'Bearer $token',
-  //       },
-  //     );
-
-  //     if (response.statusCode == 200 || response.statusCode == 204) {
-  //       final prefs = await SharedPreferences.getInstance();
-  //       await prefs.remove('access_token');
-  //       await prefs.remove('refresh_token');
-  //       return true;
-  //     } else {
-  //       throw Exception('Failed to delete account: ${response.body}');
-  //     }
-  //   } catch (e) {
-  //     throw Exception('Failed to delete account: $e');
-  //   }
-  // }
-
   Future<Map<String, String>> _getHeaders() async {
     final token = await getAuthToken();
     return {
@@ -1823,7 +1797,7 @@ class ApiService {
     final token = await getAuthToken();
     final response = await http.get(
       Uri.parse(
-          'http://127.0.0.1:8000/api/cv-search/?q=${Uri.encodeComponent(keywords)}'),
+          'http://192.168.88.10:8000/api/cv-search/?q=${Uri.encodeComponent(keywords)}'),
       headers: {
         'Authorization': 'Bearer $token',
         'Content-Type': 'application/json',

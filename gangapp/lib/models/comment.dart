@@ -57,7 +57,7 @@ class Comment {
     if (imageUrl == null) return null;
     return imageUrl!.startsWith('http')
         ? imageUrl
-        : 'http://127.0.0.1:8000$imageUrl';
+        : 'http://192.168.88.10:8000$imageUrl';
   }
 
   /// Creates a Comment instance from a JSON map

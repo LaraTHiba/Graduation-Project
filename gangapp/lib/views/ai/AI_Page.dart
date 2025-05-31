@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../../services/ai_service.dart';
 import '../../languages/language.dart';
 import 'package:provider/provider.dart';
+import '../../services/api_service.dart';
+
 
 class AI_Page extends StatefulWidget {
   const AI_Page({Key? key}) : super(key: key);
@@ -15,10 +17,12 @@ class _AI_PageState extends State<AI_Page> {
   final List<_Message> _messages = [];
   final AIService _aiService = AIService();
   bool _isLoading = false;
+  final ApiService _apiService = ApiService();
 
   Future<void> _sendMessage() async {
     final text = _controller.text.trim();
     if (text.isEmpty) return;
+
 
     setState(() {
       _messages.add(_Message(text: text, isSent: true));
@@ -28,6 +32,9 @@ class _AI_PageState extends State<AI_Page> {
 
     try {
       final reply = await _aiService.sendMessage(text);
+      final response = await _apiService.searchCVs(text);
+      print(response);
+
       setState(() {
         _messages.add(_Message(text: reply, isSent: false));
         _isLoading = false;

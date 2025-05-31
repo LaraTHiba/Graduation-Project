@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class AIService {
-  static const String baseUrl = 'http://10.0.2.2:8000'; // For Android emulator
+  static const String baseUrl = 'http://192.168.88.10:8000'; // For Android emulator
   // static const String baseUrl = 'http://localhost:8000';  // For iOS simulator
 
   Future<String> sendMessage(String message) async {

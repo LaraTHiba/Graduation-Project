@@ -1,4 +1,4 @@
 class ApiConfig {
   static const String baseUrl =
-      'http://localhost:8000'; // Change this to your backend URL
+      'http://192.168.88.10:8000/'; // Change this to your backend URL
 }
