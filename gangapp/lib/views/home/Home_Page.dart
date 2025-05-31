@@ -13,7 +13,6 @@ import '../../screens/groups_screen.dart';
 import '../ai/AI_Page.dart';
 import '../widgets/cv_search_dialog.dart';
 
-
 /// Main home page of the application
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -223,17 +222,7 @@ class _HomePageState extends State<HomePage> {
         ),
       );
     } else {
-      actions.add(
-        IconButton(
-          icon: Icon(Icons.search),
-          onPressed: () {
-            showDialog(
-              context: context,
-              builder: (context) => const CVSearchDialog(),
-            );
-          },
-        ),
-      );
+      
     }
 
     actions.add(

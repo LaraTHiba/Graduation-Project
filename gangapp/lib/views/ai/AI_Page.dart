@@ -21,6 +21,16 @@ class _AI_PageState extends State<AI_Page> {
   bool _isLoading = false;
   final ApiService _apiService = ApiService();
 
+  @override
+  void initState() {
+    super.initState();
+    // Add the default welcome message
+    _messages.add(_Message(
+        text:
+            "Welcome to Gang App! 🎉\nWe're glad to have you here.\n\nDeepSeek assistant here to make your experience even better! 🤖\n\nThanks for joining the Gang",
+        isSent: false));
+  }
+
   Future<void> _sendMessage() async {
     final text = _controller.text.trim();
     if (text.isEmpty) return;
@@ -34,6 +44,7 @@ class _AI_PageState extends State<AI_Page> {
     try {
       final reply = await _aiService.sendMessage(text);
       final response = await _apiService.searchCVs(text);
+      print('Raw AI reply: $reply');
       print(response);
 
       setState(() {
@@ -51,7 +62,10 @@ class _AI_PageState extends State<AI_Page> {
   @override
   Widget build(BuildContext context) {
     final language = context.read<Language>();
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
+      backgroundColor: isDarkMode ? Colors.grey[900] : null,
       appBar: AppBar(
         title: Row(
           children: [
@@ -98,7 +112,7 @@ class _AI_PageState extends State<AI_Page> {
                         borderSide:
                             const BorderSide(color: kPrimaryColor, width: 2),
                       ),
-                      fillColor: Colors.white,
+                      fillColor: isDarkMode ? Colors.grey[800] : Colors.white,
                       filled: true,
                     ),
                     onSubmitted: (_) => _sendMessage(),
@@ -138,6 +152,8 @@ class _MessageBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
     return Align(
       alignment: message.isSent ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
@@ -159,7 +175,9 @@ class _MessageBubble extends StatelessWidget {
         child: Text(
           message.text,
           style: TextStyle(
-            color: message.isSent ? Colors.white : kPrimaryColor,
+            color: isDarkMode && !message.isSent
+                ? Colors.white
+                : (message.isSent ? Colors.white : kPrimaryColor),
             fontWeight: message.isSent ? FontWeight.bold : FontWeight.normal,
           ),
         ),

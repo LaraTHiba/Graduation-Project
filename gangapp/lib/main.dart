@@ -41,6 +41,7 @@ class MyApp extends StatelessWidget {
     }
 
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       title: language.get('app_name'),
       themeMode: themeController.isDarkMode ? ThemeMode.dark : ThemeMode.light,
       theme: ThemeData(
