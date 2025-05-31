@@ -1404,41 +1404,46 @@ class _ProfilePageState extends State<ProfilePage> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: _primaryColor.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Icon(
-                      Icons.description_rounded,
-                      color: _primaryColor,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'CV',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: theme.textTheme.titleMedium?.color,
-                        ),
+              Expanded(
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: _primaryColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
                       ),
-                      Text(
-                        _cvFileName ?? savedFileName,
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: theme.textTheme.bodySmall?.color,
-                        ),
+                      child: Icon(
+                        Icons.description_rounded,
+                        color: _primaryColor,
                       ),
-                    ],
-                  ),
-                ],
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'CV',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: theme.textTheme.titleMedium?.color,
+                            ),
+                          ),
+                          Text(
+                            _cvFileName ?? savedFileName,
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: theme.textTheme.bodySmall?.color,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
               Row(
                 children: [

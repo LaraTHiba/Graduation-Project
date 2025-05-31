@@ -222,92 +222,94 @@ class _CreatePostDialogState extends State<CreatePostDialog> {
         padding: const EdgeInsets.all(20),
         child: Form(
           key: _formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                isEditing
-                    ? language.get('Edit post title')
-                    : language.get('Create post title'),
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 20),
-              TextFormField(
-                controller: _titleController,
-                decoration: InputDecoration(
-                  labelText: language.get('Post title'),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.max,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  isEditing
+                      ? language.get('Edit post title')
+                      : language.get('Create post title'),
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
                   ),
+                  textAlign: TextAlign.center,
                 ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter a title';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _contentController,
-                decoration: InputDecoration(
-                  labelText: language.get('Post content'),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
+                const SizedBox(height: 20),
+                TextFormField(
+                  controller: _titleController,
+                  decoration: InputDecoration(
+                    labelText: language.get('Post title'),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
                   ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter a title';
+                    }
+                    return null;
+                  },
                 ),
-                maxLines: 5,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter some content';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              if (_selectedImage != null || _webImage != null) ...[
-                _buildImagePreview(),
                 const SizedBox(height: 16),
-              ],
-              OutlinedButton.icon(
-                onPressed: _handleImageUpload,
-                icon: const Icon(Icons.image_rounded),
-                label: Text(language.get('Add image')),
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
+                TextFormField(
+                  controller: _contentController,
+                  decoration: InputDecoration(
+                    labelText: language.get('Post content'),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  maxLines: 5,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter some content';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+                if (_selectedImage != null || _webImage != null) ...[
+                  _buildImagePreview(),
+                  const SizedBox(height: 16),
+                ],
+                OutlinedButton.icon(
+                  onPressed: _handleImageUpload,
+                  icon: const Icon(Icons.image_rounded),
+                  label: Text(language.get('Add image')),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: _handleSubmit,
-                      icon: const Icon(Icons.post_add_rounded),
-                      label: Text(
-                        isEditing
-                            ? language.get('Edit post')
-                            : language.get('Post'),
-                      ),
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: _handleSubmit,
+                        icon: const Icon(Icons.post_add_rounded),
+                        label: Text(
+                          isEditing
+                              ? language.get('Edit post')
+                              : language.get('Post'),
+                        ),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ],
-              ),
-            ],
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
