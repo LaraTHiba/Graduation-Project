@@ -224,7 +224,7 @@ class _CreatePostDialogState extends State<CreatePostDialog> {
           key: _formKey,
           child: SingleChildScrollView(
             child: Column(
-              mainAxisSize: MainAxisSize.max,
+              mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(
