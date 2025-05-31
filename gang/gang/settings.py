@@ -197,5 +197,5 @@ FRONTEND_URL = 'http://localhost:3000'  # Change this to your frontend URL
 # OPENAI_API_KEY = os.getenv('OPENAI_API_KEY', '') # Commenting out the old OpenAI key setting
 
 # DeepSeek Configuration
-DEEPSEEK_API_KEY = os.getenv('DEEPSEEK_API_KEY', '')
+DEEPSEEK_API_KEY = os.getenv('DEEPSEEK_API_KEY', 'sk-72766bdec3644fb7892bc2c8586dac85')
 DEEPSEEK_BASE_URL = os.getenv('DEEPSEEK_BASE_URL', 'https://api.deepseek.com') # Default to DeepSeek's base URL
