@@ -116,9 +116,50 @@ class _CVSearchDialogState extends State<CVSearchDialog> {
                               tooltip: language.get('Download cv'),
                               onPressed: () async {
                                 final url = profile['cv_file_url'];
-                                if (url != null && await canLaunch(url)) {
-                                  await launch(url,
-                                      webOnlyWindowName: '_blank');
+                                if (url != null) {
+                                  try {
+                                    final uri = Uri.parse(url);
+                                    // Try to launch in external browser first
+                                    if (await canLaunchUrl(uri)) {
+                                      await launchUrl(
+                                        uri,
+                                        mode: LaunchMode.externalApplication,
+                                      );
+                                    } else {
+                                      // If that fails, try in-app web view
+                                      if (await canLaunchUrl(uri)) {
+                                        await launchUrl(
+                                          uri,
+                                          mode: LaunchMode.inAppWebView,
+                                        );
+                                      } else {
+                                        // If both fail, show error
+                                        if (mounted) {
+                                          ScaffoldMessenger.of(context)
+                                              .showSnackBar(
+                                            SnackBar(
+                                              content: Text(language
+                                                  .get('Could not open CV')),
+                                              duration:
+                                                  const Duration(seconds: 3),
+                                            ),
+                                          );
+                                        }
+                                      }
+                                    }
+                                  } catch (e) {
+                                    print('Error launching URL: $e');
+                                    if (mounted) {
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                              '${language.get('Error opening CV')}: $e'),
+                                          duration: const Duration(seconds: 3),
+                                        ),
+                                      );
+                                    }
+                                  }
                                 }
                               },
                             )

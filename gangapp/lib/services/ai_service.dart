@@ -25,10 +25,10 @@ class AIService {
       );
 
       if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
+        final data = jsonDecode(utf8.decode(response.bodyBytes));
         return data['reply'];
       } else {
-        final error = jsonDecode(response.body);
+        final error = jsonDecode(utf8.decode(response.bodyBytes));
         throw Exception(
             error['error'] ?? 'Failed to get response: ${response.statusCode}');
       }
