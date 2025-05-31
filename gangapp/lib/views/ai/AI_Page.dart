@@ -3,6 +3,7 @@ import '../../services/ai_service.dart';
 import '../../languages/language.dart';
 import 'package:provider/provider.dart';
 import '../../services/api_service.dart';
+import '../../controllers/profile_controller.dart';
 
 const Color kPrimaryColor = Color(0xFF006C5F);
 const Color kSecondaryColor = Color(0xFF757575);
@@ -24,11 +25,59 @@ class _AI_PageState extends State<AI_Page> {
   @override
   void initState() {
     super.initState();
-    // Add the default welcome message
-    _messages.add(_Message(
-        text:
-            "Welcome to Gang App! 🎉\nWe're glad to have you here.\n\nDeepSeek assistant here to make your experience even better! 🤖\n\nThanks for joining the Gang",
-        isSent: false));
+    _loadWelcomeMessage();
+  }
+
+  Future<void> _loadWelcomeMessage() async {
+    final language = context.read<Language>();
+    String username = ""; // Default empty string
+    try {
+      final fetchedUsername = await ProfileController().getCurrentUsername();
+      if (fetchedUsername != null) {
+        username = fetchedUsername;
+      }
+    } catch (e) {
+      print('Error fetching username: $e');
+    }
+
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
+    final welcomeMessage = TextSpan(
+      style: TextStyle(
+        color: isDarkMode ? Colors.white : null,
+      ),
+      children: [
+        TextSpan(
+            text: "Welcome to ",
+            style: TextStyle(fontWeight: FontWeight.normal)),
+        TextSpan(
+          text: "Gang App",
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        TextSpan(
+            text: " 🎉\n", style: TextStyle(fontWeight: FontWeight.normal)),
+        TextSpan(
+            text: "We\'re glad to have you here ",
+            style: TextStyle(fontWeight: FontWeight.normal)),
+        TextSpan(
+          text: "$username",
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        TextSpan(
+            text: ".\n\n", style: TextStyle(fontWeight: FontWeight.normal)),
+        TextSpan(
+            text:
+                "DeepSeek assistant here to make your experience even better! 🤖\n\n",
+            style: TextStyle(fontWeight: FontWeight.normal)),
+        TextSpan(
+            text: "Thanks for joining the Gang",
+            style: TextStyle(fontWeight: FontWeight.normal)),
+      ],
+    );
+
+    setState(() {
+      _messages.add(_Message(textContent: welcomeMessage, isSent: false));
+    });
   }
 
   Future<void> _sendMessage() async {
@@ -36,7 +85,7 @@ class _AI_PageState extends State<AI_Page> {
     if (text.isEmpty) return;
 
     setState(() {
-      _messages.add(_Message(text: text, isSent: true));
+      _messages.add(_Message(textContent: text, isSent: true));
       _controller.clear();
       _isLoading = true;
     });
@@ -48,12 +97,13 @@ class _AI_PageState extends State<AI_Page> {
       print(response);
 
       setState(() {
-        _messages.add(_Message(text: reply, isSent: false));
+        _messages.add(_Message(textContent: reply, isSent: false));
         _isLoading = false;
       });
     } catch (e) {
       setState(() {
-        _messages.add(_Message(text: 'Error: ${e.toString()}', isSent: false));
+        _messages.add(
+            _Message(textContent: 'Error: ${e.toString()}', isSent: false));
         _isLoading = false;
       });
     }
@@ -139,10 +189,10 @@ class _AI_PageState extends State<AI_Page> {
 }
 
 class _Message {
-  final String text;
+  final dynamic textContent;
   final bool isSent;
 
-  _Message({required this.text, required this.isSent});
+  _Message({required this.textContent, required this.isSent});
 }
 
 class _MessageBubble extends StatelessWidget {
@@ -172,14 +222,16 @@ class _MessageBubble extends StatelessWidget {
               ),
           ],
         ),
-        child: Text(
-          message.text,
+        child: DefaultTextStyle.merge(
           style: TextStyle(
-            color: isDarkMode && !message.isSent
-                ? Colors.white
-                : (message.isSent ? Colors.white : kPrimaryColor),
+            color: !message.isSent && !isDarkMode
+                ? Colors.black
+                : (message.isSent ? Colors.white : Colors.white),
             fontWeight: message.isSent ? FontWeight.bold : FontWeight.normal,
           ),
+          child: message.textContent is String
+              ? Text(message.textContent)
+              : RichText(text: message.textContent),
         ),
       ),
     );
