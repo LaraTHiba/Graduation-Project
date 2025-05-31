@@ -3,6 +3,7 @@ from core.models.posts import Post
 from core.models.comments import Comment
 from django.contrib.auth import get_user_model
 from core.models.interests import Interest
+import json
 
 User = get_user_model()
 
@@ -33,6 +34,13 @@ class CommentSerializer(serializers.ModelSerializer):
         replies = obj.replies.filter(is_deleted=False).order_by('created_at')
         serializer = CommentSerializer(replies, many=True, context=self.context)
         return serializer.data
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        # Ensure content is properly encoded
+        if 'content' in data:
+            data['content'] = data['content']
+        return data
 
 class PostSerializer(serializers.ModelSerializer):
     username = serializers.SerializerMethodField()
@@ -73,4 +81,13 @@ class PostSerializer(serializers.ModelSerializer):
         # Get all non-deleted top-level comments
         comments = obj.comments.filter(is_deleted=False, parent_comment=None).order_by('-created_at')
         serializer = CommentSerializer(comments, many=True, context=self.context)
-        return serializer.data 
+        return serializer.data
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        # Ensure content is properly encoded
+        if 'content' in data:
+            data['content'] = data['content']
+        if 'title' in data:
+            data['title'] = data['title']
+        return data 

@@ -9,6 +9,7 @@ from core.serializers.posts import PostSerializer, CommentSerializer
 from core.models.interests import Interest
 from core.serializers.interests import InterestSerializer
 from django.http import Http404
+import json
 
 
 class PostListCreateView(generics.ListCreateAPIView):
@@ -22,6 +23,24 @@ class PostListCreateView(generics.ListCreateAPIView):
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(
+            serializer.data,
+            content_type="application/json; charset=utf-8"
+        )
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        return Response(
+            serializer.data,
+            status=status.HTTP_201_CREATED,
+            content_type="application/json; charset=utf-8"
+        )
 
 
 class PostDetailView(generics.RetrieveUpdateDestroyAPIView):
@@ -135,6 +154,24 @@ class CommentListCreateView(generics.ListCreateAPIView):
         post = Post.objects.get(id=post_id)
         serializer.save(user=self.request.user, post=post)
 
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(
+            serializer.data,
+            content_type="application/json; charset=utf-8"
+        )
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        return Response(
+            serializer.data,
+            status=status.HTTP_201_CREATED,
+            content_type="application/json; charset=utf-8"
+        )
+
 
 class CommentDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = CommentSerializer
@@ -224,6 +261,16 @@ class CommentReplyCreateView(generics.CreateAPIView):
         post = Post.objects.get(id=post_id)
         parent_comment = Comment.objects.get(id=parent_id)
         serializer.save(user=self.request.user, post=post, parent_comment=parent_comment)
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        return Response(
+            serializer.data,
+            status=status.HTTP_201_CREATED,
+            content_type="application/json; charset=utf-8"
+        )
 
 
 class UserCommentListView(generics.ListAPIView):
