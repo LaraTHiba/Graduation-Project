@@ -13,11 +13,8 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 from datetime import timedelta
 import os
 from pathlib import Path
-try:
-    from dotenv import load_dotenv
-    load_dotenv()
-except ImportError:
-    pass
+from dotenv import load_dotenv
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -197,4 +194,8 @@ DEFAULT_FROM_EMAIL = ''  # Your email
 FRONTEND_URL = 'http://localhost:3000'  # Change this to your frontend URL
 
 # OpenAI Configuration
-OPENAI_API_KEY = os.getenv('OPENAI_API_KEY', '')
+# OPENAI_API_KEY = os.getenv('OPENAI_API_KEY', '') # Commenting out the old OpenAI key setting
+
+# DeepSeek Configuration
+DEEPSEEK_API_KEY = os.getenv('DEEPSEEK_API_KEY', '')
+DEEPSEEK_BASE_URL = os.getenv('DEEPSEEK_BASE_URL', 'https://api.deepseek.com') # Default to DeepSeek's base URL

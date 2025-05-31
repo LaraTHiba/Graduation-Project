@@ -14,7 +14,20 @@ class AuthController extends ChangeNotifier {
     if (username.isEmpty || password.isEmpty) {
       throw Exception('Username and password cannot be empty');
     }
-    return await _apiService.login(username, password);
+    final result = await _apiService.login(username, password);
+
+    // Save the JWT token to SharedPreferences
+    if (result.containsKey('access')) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('jwtToken', result['access']);
+    } else if (result.containsKey('token')) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('jwtToken', result['token']);
+    } else {
+      throw Exception('No token found in login response');
+    }
+
+    return result;
   }
 
   /// Registers a new user with the provided information
